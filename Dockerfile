@@ -8,6 +8,6 @@ RUN mvn clean package
 
 FROM payara/server-full:latest
 
-COPY --from=build /app/target/Inventory_Order_System-1.0-SNAPSHOT.war $DEPLOY_DIR
+COPY --from=build /app/target/*.war $DEPLOY_DIR
 
 EXPOSE 8080
