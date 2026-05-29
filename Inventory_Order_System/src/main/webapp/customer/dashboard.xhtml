@@ -1,0 +1,224 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/customerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="dashboard"/>
+
+    <ui:define name="title">Products - IOS Customer</ui:define>
+    <ui:define name="pageTitle">Browse Products</ui:define>
+    <ui:define name="pageSubtitle">Welcome, <h:outputText value="#{userSession.name}"/>! Explore available products.</ui:define>
+
+    <ui:define name="topbarRight">
+        <div class="date-badge">
+            &#128197;
+            <h:outputText value="#{now}">
+                <f:convertDateTime pattern="EEE, dd MMM yyyy"/>
+            </h:outputText>
+        </div>
+    </ui:define>
+
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{customerDashboardBean.reload()}"/>
+
+        <!-- Stat cards -->
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:24px;">
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{customerDashboardBean.totalProducts}"/></div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-icon">&#128230;</div>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{customerDashboardBean.inStockCount}"/></div>
+                        <div class="stat-label">In Stock</div>
+                    </div>
+                    <div class="stat-icon">&#10003;</div>
+                </div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{customerDashboardBean.outOfStockCount}"/></div>
+                        <div class="stat-label">Out of Stock</div>
+                    </div>
+                    <div class="stat-icon">&#10007;</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manager Cards -->
+        <h:form id="managerForm">
+            <div style="margin-bottom:24px;">
+                <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:12px;">&#127970; Browse by Supplier</div>
+                <div style="display:flex; flex-wrap:wrap; gap:14px;">
+
+                    <!-- All Suppliers card -->
+                    <h:commandLink styleClass="manager-card #{customerDashboardBean.selectedManager == 0 ? 'manager-card-active' : ''}"
+                                   action="#{customerDashboardBean.clearManagerFilter()}">
+                        <f:ajax execute="@this" render="managerForm mainForm"/>
+                        <div class="manager-card-inner">
+                            <div class="manager-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">&#127968;</div>
+                            <div class="manager-card-name">All Suppliers</div>
+                            <div class="manager-card-count"><h:outputText value="#{customerDashboardBean.totalProducts}"/> products</div>
+                        </div>
+                    </h:commandLink>
+
+                    <!-- One card per manager -->
+                    <ui:repeat value="#{customerDashboardBean.managerList}" var="m">
+                        <h:commandLink styleClass="manager-card #{customerDashboardBean.selectedManager == m.userId ? 'manager-card-active' : ''}"
+                                       action="#{customerDashboardBean.filterByManager(m.userId)}">
+                            <f:ajax execute="@this" render="managerForm mainForm"/>
+                            <div class="manager-card-inner">
+                                <div class="manager-avatar">
+                                    <h:outputText value="#{not empty m.organizationName ? m.organizationName.substring(0,1).toUpperCase() : (not empty m.name ? m.name.substring(0,1).toUpperCase() : '?')}"/>
+                                </div>
+                                <div class="manager-card-name">
+                                    <h:outputText value="#{not empty m.organizationName ? m.organizationName : (not empty m.name ? m.name : 'Unknown')}"/>
+                                </div>
+                                <div class="manager-card-count">
+                                    <h:outputText value="#{customerDashboardBean.getManagerProductCount(m.userId)}"/> products
+                                </div>
+                            </div>
+                        </h:commandLink>
+                    </ui:repeat>
+
+                </div>
+            </div>
+        </h:form>
+
+        <!-- Search + filter bar + product grid: single form so Ajax works across both -->
+        <h:form id="mainForm">
+            <div class="search-bar">
+                <div class="form-group">
+                    <label style="font-size:12px; font-weight:600; color:#374151; margin-bottom:4px; display:block;">Search</label>
+                    <h:inputText id="searchQuery"
+                                 value="#{customerDashboardBean.searchQuery}"
+                               
+                                 style="width:100%;"/>
+                </div>
+                <div class="form-group" style="min-width:200px;">
+                    <label style="font-size:12px; font-weight:600; color:#374151; margin-bottom:4px; display:block;">Category</label>
+                    <h:selectOneMenu id="categoryFilter"
+                                     value="#{customerDashboardBean.selectedCategory}"
+                                     onchange="this.form.querySelector('[id$=applyBtn]').click();">
+                        <f:selectItem itemLabel="All Categories" itemValue="0"/>
+                        <f:selectItems value="#{customerDashboardBean.categoryList}" var="c"
+                                       itemValue="#{c.categoryId}" itemLabel="#{c.categoryName}"/>
+                        <f:ajax execute="categoryFilter" render="productGrid statsRow"
+                                listener="#{customerDashboardBean.onCategoryChange()}"/>
+                    </h:selectOneMenu>
+                </div>
+                <h:commandButton id="applyBtn" value="&#128269; Search" styleClass="btn-teal"
+                                 action="#{customerDashboardBean.applyFilter()}">
+                    <f:ajax execute="@form" render="productGrid statsRow"/>
+                </h:commandButton>
+                <h:commandButton value="Clear" styleClass="btn-clear"
+                                 action="#{customerDashboardBean.clearFilter()}">
+                    <f:ajax execute="@form" render="mainForm productGrid statsRow"/>
+                </h:commandButton>
+            </div>
+
+            <!-- Active manager filter banner -->
+            <h:panelGroup rendered="#{customerDashboardBean.selectedManager != 0}" layout="block"
+                          style="background:#ede9fe; border:1px solid #ddd6fe; border-radius:10px; padding:10px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:13px; font-weight:600; color:#6d28d9;">
+                    &#127970; Showing products from: <h:outputText value="#{customerDashboardBean.selectedManagerName}"/>
+                </span>
+                <h:commandButton value="&#10007; Clear" styleClass="btn-clear" style="padding:4px 12px; font-size:12px;">
+                    <f:ajax execute="@this" render="managerForm mainForm" listener="#{customerDashboardBean.clearManagerFilter()}"/>
+                </h:commandButton>
+            </h:panelGroup>
+
+            <!-- Stat counts (reactive to filter) -->
+            <h:panelGroup id="statsRow" layout="block" style="margin-bottom:20px;">
+                <span style="font-size:13px; color:#64748b;">
+                    Showing <strong><h:outputText value="#{customerDashboardBean.filteredProducts.size()}"/></strong>
+                    of <strong><h:outputText value="#{customerDashboardBean.totalProducts}"/></strong> products
+                    <h:panelGroup rendered="#{customerDashboardBean.selectedCategory != 0}">
+                        in <strong>
+                            <h:outputText value="#{customerDashboardBean.selectedCategoryName}"/>
+                        </strong>
+                    </h:panelGroup>
+                </span>
+            </h:panelGroup>
+
+            <!-- Product grid -->
+            <h:panelGroup id="productGrid" layout="block">
+
+                <h:panelGroup rendered="#{not empty customerDashboardBean.filteredProducts}">
+                    <div class="product-grid">
+                        <ui:repeat value="#{customerDashboardBean.filteredProducts}" var="p">
+                            <div class="product-card">
+
+                                <h:panelGroup rendered="#{not empty p.productImage}">
+                                    <img src="#{request.contextPath}/product-images/#{p.productImage}" 
+                                         style="width:100%; height:180px; object-fit:cover; border-radius:12px 12px 0 0; margin:-16px -16px 16px -16px;"/>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{empty p.productImage}">
+                                    <div style="width:100%; height:180px; background:linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border-radius:12px 12px 0 0; margin:-16px -16px 16px -16px; display:flex; align-items:center; justify-content:center; font-size:64px; color:white;">
+                                        📦
+                                    </div>
+                                </h:panelGroup>
+
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div>
+                                        <div class="product-card-name">
+                                            <h:outputText value="#{p.name}"/>
+                                        </div>
+                                        <div class="product-card-desc">
+                                            <h:outputText value="#{not empty p.description ? p.description : 'No description'}"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="product-card-meta">
+                                    <div class="product-card-price">
+                                        &#8377;<h:outputText value="#{p.price}">
+                                            <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                        </h:outputText>
+                                    </div>
+                                    <h:panelGroup rendered="#{p.stock gt 0}">
+                                        <span class="badge-instock">&#10003; In Stock (<h:outputText value="#{p.stock}"/>)</span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{p.stock == 0}">
+                                        <span class="badge-outstock">&#10007; Out of Stock</span>
+                                    </h:panelGroup>
+                                </div>
+
+                                <div class="product-card-footer">
+                                    <span class="product-card-category">
+                                        &#128193;
+                                        <h:outputText value="#{p.categoryId != null ? p.categoryId.categoryName : 'Uncategorized'}"/>
+                                    </span>
+                                    <h:commandButton value="View Details"
+                                                     styleClass="btn-view-details"
+                                                     action="#{customerDashboardBean.viewDetails(p)}"/>
+                                </div>
+
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{empty customerDashboardBean.filteredProducts}">
+                    <div class="empty-state" style="background:white; border-radius:16px; padding:60px 20px; border:1px solid #f1f5f9;">
+                        <div class="empty-icon">&#128230;</div>
+                        <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:8px;">No products found</p>
+                        <p style="font-size:13px; color:#94a3b8;">Try adjusting your search or category filter.</p>
+                    </div>
+                </h:panelGroup>
+
+            </h:panelGroup>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

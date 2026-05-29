@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title><ui:insert name="title">Admin - IOS</ui:insert></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <h:outputStylesheet library="css" name="style.css"/>
+    <ui:insert name="extraHead"/>
+</h:head>
+
+<h:body>
+
+    <!-- PrimeFaces Growl — one place for all pages -->
+    <p:growl id="growl" life="3000" showDetail="false" sticky="false"/>
+
+    <!-- ── SIDEBAR ── -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">
+                <div class="brand-icon">&#128230;</div>
+                <div>
+                    <div class="brand-text">IOS Admin</div>
+                    <div class="brand-sub">Inventory Order System</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-section-title">Main Menu</div>
+            <a href="dashboard.xhtml"   class="nav-item #{activeMenu == 'dashboard'   ? 'active' : ''}"><span class="nav-icon">&#9732;</span> Dashboard</a>
+            <a href="manageUsers.xhtml" class="nav-item #{activeMenu == 'users'       ? 'active' : ''}"><span class="nav-icon">&#128100;</span> Users</a>
+
+            <div class="nav-section-title">Operations</div>
+            <a href="payments.xhtml"    class="nav-item #{activeMenu == 'payments'    ? 'active' : ''}"><span class="nav-icon">&#128179;</span> Payments</a>
+
+            <div class="nav-section-title">Analytics</div>
+            <a href="reports.xhtml"     class="nav-item #{activeMenu == 'reports'     ? 'active' : ''}"><span class="nav-icon">&#128196;</span> Reports</a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">
+                    <h:outputText value="#{userSession.name.substring(0,1).toUpperCase()}"/>
+                </div>
+                <div>
+                    <div class="user-name"><h:outputText value="#{userSession.name}"/></div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+            <h:form>
+                <h:commandButton value="&#x2192; Logout"
+                                 action="#{loginBean.logout()}"
+                                 styleClass="logout-btn"/>
+            </h:form>
+        </div>
+    </div>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1><ui:insert name="pageTitle">Page</ui:insert></h1>
+                <p><ui:insert name="pageSubtitle"/></p>
+            </div>
+            <div class="topbar-right">
+                <ui:insert name="topbarRight"/>
+            </div>
+        </div>
+
+        <!-- Page specific content -->
+        <ui:insert name="content"/>
+
+    </div>
+
+    <!-- ── CONFIRM DELETE DIALOG — one place for all pages ── -->
+    <div class="overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-icon">&#128465;</div>
+            <div class="confirm-title"><ui:insert name="confirmTitle">Delete</ui:insert></div>
+            <div class="confirm-msg"><ui:insert name="confirmMsg">Are you sure you want to delete this record?</ui:insert></div>
+            <div class="confirm-actions">
+                <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
+                <button class="confirm-yes" id="confirmYesBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SHARED SCRIPT — confirm dialog logic ── -->
+    <script>
+        function showConfirm() {
+            document.getElementById('confirmOverlay').classList.add('show');
+        }
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('show');
+        }
+        document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirm();
+        });
+    </script>
+
+    <!-- Each page wires its own confirmYesBtn click — injected here -->
+    <ui:insert name="confirmScript"/>
+
+</h:body>
+</html>

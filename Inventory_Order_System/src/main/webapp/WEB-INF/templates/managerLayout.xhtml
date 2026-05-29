@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title><ui:insert name="title">Manager - IOS</ui:insert></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <h:outputStylesheet library="css" name="style.css"/>
+    <ui:insert name="extraHead"/>
+</h:head>
+
+<h:body>
+
+    <p:growl id="growl" life="3000" showDetail="false" sticky="false"/>
+
+    <!-- ── SIDEBAR ── -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">
+                <div class="brand-icon">&#128230;</div>
+                <div>
+                    <div class="brand-text">IOS Manager</div>
+                    <div class="brand-sub">
+                        <h:outputText value="#{managerBean.manager.organizationName}"
+                                      rendered="#{managerBean.orgNameSet}"/>
+                        <h:outputText value="Inventory Order System"
+                                      rendered="#{!managerBean.orgNameSet}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-section-title">Main Menu</div>
+            <a href="dashboard.xhtml" class="nav-item #{activeMenu == 'dashboard' ? 'active' : ''}">
+                <span class="nav-icon">&#9732;</span> Dashboard
+            </a>
+
+            <div class="nav-section-title">Catalogue</div>
+            <a href="category.xhtml" class="nav-item #{activeMenu == 'category' ? 'active' : ''}">
+                <span class="nav-icon">&#128193;</span> Categories
+            </a>
+            <a href="product.xhtml" class="nav-item #{activeMenu == 'product' ? 'active' : ''}">
+                <span class="nav-icon">&#128230;</span> My Products
+            </a>
+
+            <div class="nav-section-title">Operations</div>
+            <a href="requests.xhtml" class="nav-item #{activeMenu == 'requests' ? 'active' : ''}">
+                <span class="nav-icon">&#128203;</span> Requests
+            </a>
+            <a href="inventory.xhtml" class="nav-item #{activeMenu == 'inventory' ? 'active' : ''}">
+                <span class="nav-icon">&#128200;</span> Inventory Analytics
+            </a>
+            <a href="monthlyReport.xhtml" class="nav-item #{activeMenu == 'monthlyReport' ? 'active' : ''}">
+                <span class="nav-icon">&#128202;</span> Monthly Report
+            </a>
+            <a href="#" class="nav-item #{activeMenu == 'payments' ? 'active' : ''}">
+                <span class="nav-icon">&#128179;</span> Payments
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">
+                    <h:outputText value="#{userSession.name.substring(0,1).toUpperCase()}"/>
+                </div>
+                <div>
+                    <div class="user-name"><h:outputText value="#{userSession.name}"/></div>
+                    <div class="user-role">Manager</div>
+                </div>
+            </div>
+            <h:form>
+                <h:commandButton value="&#x2192; Logout"
+                                 action="#{loginBean.logout()}"
+                                 styleClass="logout-btn"/>
+            </h:form>
+        </div>
+    </div>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1><ui:insert name="pageTitle">Page</ui:insert></h1>
+                <p><ui:insert name="pageSubtitle"/></p>
+            </div>
+            <div class="topbar-right">
+                <ui:insert name="topbarRight"/>
+            </div>
+        </div>
+
+        <ui:insert name="content"/>
+    </div>
+
+    <!-- ── CONFIRM DELETE DIALOG ── -->
+    <div class="overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-icon">&#128465;</div>
+            <div class="confirm-title"><ui:insert name="confirmTitle">Delete</ui:insert></div>
+            <div class="confirm-msg"><ui:insert name="confirmMsg">Are you sure?</ui:insert></div>
+            <div class="confirm-actions">
+                <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
+                <button class="confirm-yes" id="confirmYesBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showConfirm() { document.getElementById('confirmOverlay').classList.add('show'); }
+        function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
+        document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirm();
+        });
+    </script>
+
+    <ui:insert name="confirmScript"/>
+
+</h:body>
+</html>

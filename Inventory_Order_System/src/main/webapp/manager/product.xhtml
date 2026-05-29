@@ -1,0 +1,270 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/managerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="product"/>
+
+    <ui:define name="title">My Products - IOS Manager</ui:define>
+    <ui:define name="pageTitle">My Products</ui:define>
+    <ui:define name="pageSubtitle">
+        Products listed under
+        <h:outputText value="#{managerBean.manager.organizationName}"
+                      rendered="#{managerBean.orgNameSet}"/>
+        <h:outputText value="your organization"
+                      rendered="#{!managerBean.orgNameSet}"/>
+    </ui:define>
+    <ui:define name="confirmTitle">Delete Product</ui:define>
+    <ui:define name="confirmMsg">Are you sure you want to delete this product?</ui:define>
+
+    <ui:define name="content">
+        <h:form id="productForm" enctype="multipart/form-data">
+
+            <!-- FORM CARD -->
+            <div class="form-card #{managerProductBean.productEditMode ? 'edit-mode' : ''}">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <h:outputText value="&#9998; Edit Product"  rendered="#{managerProductBean.productEditMode}"/>
+                            <h:outputText value="&#128230; Add Product" rendered="#{!managerProductBean.productEditMode}"/>
+                        </div>
+                        <div class="card-subtitle">
+                            Product will be linked to:
+                            <strong>
+                                <h:outputText value="#{managerBean.manager.organizationName}"
+                                              rendered="#{managerBean.orgNameSet}"/>
+                                <h:outputText value="your account"
+                                              rendered="#{!managerBean.orgNameSet}"/>
+                            </strong>
+                        </div>
+                    </div>
+                    <h:panelGroup rendered="#{managerProductBean.productEditMode}">
+                        <span class="edit-badge">&#9998; Edit Mode</span>
+                    </h:panelGroup>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <h:inputText id="productName"
+                                     value="#{managerProductBean.productName}"
+                                     required="true"
+                                     requiredMessage="Product name is required!"
+                                     maxlength="100"/>
+                        <h:message for="productName" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <h:inputText id="description"
+                                     value="#{managerProductBean.description}"
+                                     maxlength="255"/>
+                        <h:message for="description" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Price (&#8377;) *</label>
+                        <h:inputText id="price"
+                                     value="#{managerProductBean.price}"
+                                     required="true"
+                                     requiredMessage="Price is required!">
+                            <f:validateDoubleRange minimum="0.01" maximum="9999999.99"/>
+                            <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                        </h:inputText>
+                        <h:message for="price" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stock *</label>
+                        <h:inputText id="stock"
+                                     value="#{managerProductBean.stock}"
+                                     required="true"
+                                     requiredMessage="Stock is required!">
+                            <f:validateLongRange minimum="0"/>
+                        </h:inputText>
+                        <h:message for="stock" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <span class="hint">Available units for sale</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Min Order Quantity *</label>
+                        <h:inputText id="minQty"
+                                     value="#{managerProductBean.minOrderQuantity}"
+                                     required="true"
+                                     requiredMessage="Minimum order quantity is required!">
+                            <f:validateLongRange minimum="1"/>
+                        </h:inputText>
+                        <h:message for="minQty" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <span class="hint">Minimum units per order (wholesale)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Product Image</label>
+                        <h:inputFile id="productImage"
+                                     value="#{managerProductBean.uploadedFile}"
+                                     accept="image/*"/>
+                        <h:message for="productImage" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <span class="hint">Max 5MB (jpg, png, gif, webp)</span>
+                        <h:panelGroup rendered="#{not empty managerProductBean.productImage}">
+                            <div style="margin-top:8px;">
+                                <img src="#{request.contextPath}/product-images/#{managerProductBean.productImage}" 
+                                     style="max-width:100px; max-height:100px; border-radius:8px; border:2px solid #e2e8f0;"/>
+                            </div>
+                        </h:panelGroup>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <h:selectOneMenu id="category"
+                                         value="#{managerProductBean.selectedCategoryId}"
+                                         required="true"
+                                         requiredMessage="Please select a category!">
+                            <f:selectItem itemLabel="-- Select Category --" itemValue="0"/>
+                            <f:selectItems value="#{managerProductBean.categoryList}" var="c"
+                                           itemValue="#{c.categoryId}" itemLabel="#{c.categoryName}"/>
+                        </h:selectOneMenu>
+                        <h:message for="category" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <h:commandButton value="&#10003; Save Product"
+                                     action="#{managerProductBean.saveProduct()}"
+                                     styleClass="btn #{managerProductBean.productEditMode ? 'btn-update' : 'btn-primary'}">
+                        <f:ajax execute="@form" render="productForm growl"/>
+                    </h:commandButton>
+                    <h:panelGroup rendered="#{managerProductBean.productEditMode}">
+                        <h:commandButton value="&#10007; Cancel" styleClass="btn btn-cancel" immediate="true">
+                            <f:ajax execute="@this" render="productForm"
+                                    listener="#{managerProductBean.resetProductForm()}"/>
+                        </h:commandButton>
+                    </h:panelGroup>
+                </div>
+            </div>
+
+            <!-- TABLE CARD -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128230; My Products</div>
+                        <div class="card-subtitle">
+                            <h:outputText value="#{managerProductBean.productList.size()}"/> products
+                        </div>
+                    </div>
+                </div>
+
+                <h:panelGroup rendered="#{not empty managerProductBean.productList}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Image</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Min Qty</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <h:dataTable value="#{managerProductBean.productList}" var="p">
+                                <h:column>
+                                    <h:outputText value="#{p.productId}"/>
+                                </h:column>
+                                <h:column>
+                                    <span style="font-weight:600; color:#0f172a;">
+                                        <h:outputText value="#{p.name}"/>
+                                    </span>
+                                    <h:panelGroup rendered="#{not empty p.description}">
+                                        <br/>
+                                        <span style="font-size:12px; color:#94a3b8;">
+                                            <h:outputText value="#{p.description}"/>
+                                        </span>
+                                    </h:panelGroup>
+                                </h:column>
+                                <h:column>
+                                    <h:panelGroup rendered="#{not empty p.productImage}">
+                                        <img src="#{request.contextPath}/product-images/#{p.productImage}" 
+                                             style="width:50px; height:50px; object-fit:cover; border-radius:8px;"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{empty p.productImage}">
+                                        <div style="width:50px; height:50px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                                            📦
+                                        </div>
+                                    </h:panelGroup>
+                                </h:column>
+                                <h:column>
+                                    <span class="badge badge-Manager">
+                                        <h:outputText value="#{p.categoryId != null ? p.categoryId.categoryName : '—'}"/>
+                                    </span>
+                                </h:column>
+                                <h:column>
+                                    <span style="font-weight:600;">
+                                        &#8377;<h:outputText value="#{p.price}">
+                                            <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                        </h:outputText>
+                                    </span>
+                                </h:column>
+                                <h:column>
+                                    <span class="badge #{p.stock == 0 ? 'badge-Cancelled' : p.stock lt 10 ? 'badge-Pending' : 'badge-Active'}">
+                                        <h:outputText value="#{p.stock}"/>
+                                    </span>
+                                </h:column>
+                                <h:column>
+                                    <span class="badge badge-Manager">
+                                        <h:outputText value="#{p.minOrderQuantity != null ? p.minOrderQuantity : 1}"/>
+                                    </span>
+                                </h:column>
+                                <h:column>
+                                    <h:outputText value="#{p.createdAt}">
+                                        <f:convertDateTime pattern="dd MMM yyyy"/>
+                                    </h:outputText>
+                                </h:column>
+                                <h:column>
+                                    <div class="action-btns">
+                                        <h:commandButton value="&#9998; Edit" styleClass="btn-edit" immediate="true">
+                                            <f:ajax execute="@this" render="productForm"
+                                                    listener="#{managerProductBean.editProduct(p)}"/>
+                                        </h:commandButton>
+                                        <h:commandButton value="&#128465; Delete" styleClass="btn-delete"
+                                                         immediate="true" onclick="showConfirm();">
+                                            <f:ajax execute="@this" render="productForm"
+                                                    listener="#{managerProductBean.prepareDeleteProduct(p.productId)}"/>
+                                        </h:commandButton>
+                                    </div>
+                                </h:column>
+                            </h:dataTable>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{empty managerProductBean.productList}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128230;</div>
+                        <p>No products yet. Add your first product above.</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+
+            <h:commandButton id="confirmDeleteBtn"
+                             action="#{managerProductBean.confirmDeleteProduct()}"
+                             style="display:none;" immediate="true">
+                <f:ajax event="action" execute="@this" render="productForm growl"/>
+            </h:commandButton>
+
+        </h:form>
+    </ui:define>
+
+    <ui:define name="confirmScript">
+        <script>
+            document.getElementById('confirmYesBtn').addEventListener('click', function() {
+                closeConfirm();
+                document.getElementById('productForm:confirmDeleteBtn').click();
+            });
+        </script>
+    </ui:define>
+
+</ui:composition>

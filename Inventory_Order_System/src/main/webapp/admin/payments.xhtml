@@ -1,0 +1,146 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/adminLayout.xhtml">
+
+    <ui:param name="activeMenu" value="payments"/>
+
+    <ui:define name="title">Payment Management - IOS</ui:define>
+    <ui:define name="pageTitle">Payment Management</ui:define>
+    <ui:define name="pageSubtitle">View and manage all payments</ui:define>
+
+    <ui:define name="content">
+        <h:form id="paymentForm">
+
+            <!-- Stats -->
+            <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:24px;">
+                <div class="stat-card green">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{adminPaymentBean.paidCount}"/></div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-icon">&#128179;</div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{adminPaymentBean.pendingCount}"/></div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-icon">&#9203;</div>
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{adminPaymentBean.failedCount}"/></div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-icon">&#10060;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128179; All Payments</div>
+                        <div class="card-subtitle">
+                            <h:outputText value="#{adminPaymentBean.paymentList.size()}"/> payments total
+                        </div>
+                    </div>
+                </div>
+
+                <h:panelGroup rendered="#{not empty adminPaymentBean.paymentList}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Customer</th>
+                                <th>Manager</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <h:dataTable value="#{adminPaymentBean.paymentList}" var="pay">
+
+                                <h:column>
+                                    <span style="font-weight:600; color:#6366f1;">
+                                        #<h:outputText value="#{pay.paymentId}"/>
+                                    </span>
+                                </h:column>
+
+                                <h:column>
+                                    <span class="user-table-avatar">
+                                        <h:outputText value="#{pay.customerId.name.substring(0,1).toUpperCase()}"/>
+                                    </span>
+                                    <h:outputText value="#{pay.customerId.name}"/>
+                                </h:column>
+
+                                <h:column>
+                                    <h:outputText value="#{pay.managerId.organizationName}"/>
+                                </h:column>
+
+                                <h:column>
+                                    <strong>&#8377;<h:outputText value="#{pay.totalAmount}"/></strong>
+                                </h:column>
+
+                                <h:column>
+                                    <h:outputText value="#{pay.paymentDate}">
+                                        <f:convertDateTime pattern="dd MMM yyyy HH:mm"/>
+                                    </h:outputText>
+                                </h:column>
+
+                                <h:column>
+                                    <span class="badge badge-#{pay.status}">
+                                        <h:outputText value="#{pay.status}"/>
+                                    </span>
+                                </h:column>
+
+                                <h:column>
+                                    <div class="action-btns">
+                                        <h:commandButton value="&#10003; Completed"
+                                                         styleClass="btn-approve"
+                                                         rendered="#{pay.status.name() != 'COMPLETED'}">
+                                            <f:ajax execute="@this" render="paymentForm growl"
+                                                    listener="#{adminPaymentBean.updateStatus(pay, 'COMPLETED')}"/>
+                                        </h:commandButton>
+                                        <h:commandButton value="&#9203; Pending"
+                                                         styleClass="btn-edit"
+                                                         rendered="#{pay.status.name() != 'PENDING'}">
+                                            <f:ajax execute="@this" render="paymentForm growl"
+                                                    listener="#{adminPaymentBean.updateStatus(pay, 'PENDING')}"/>
+                                        </h:commandButton>
+                                        <h:commandButton value="&#10060; Failed"
+                                                         styleClass="btn-delete"
+                                                         rendered="#{pay.status.name() != 'FAILED'}">
+                                            <f:ajax execute="@this" render="paymentForm growl"
+                                                    listener="#{adminPaymentBean.updateStatus(pay, 'FAILED')}"/>
+                                        </h:commandButton>
+                                    </div>
+                                </h:column>
+
+                            </h:dataTable>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{empty adminPaymentBean.paymentList}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128179;</div>
+                        <p>No payments found.</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

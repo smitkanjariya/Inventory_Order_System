@@ -1,0 +1,202 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/adminLayout.xhtml">
+
+    <ui:param name="activeMenu" value="users"/>
+
+    <ui:define name="title">Manage Users - IOS</ui:define>
+    <ui:define name="pageTitle">User Management</ui:define>
+    <ui:define name="pageSubtitle">Create and manage system users</ui:define>
+    <ui:define name="confirmTitle">Delete User</ui:define>
+    <ui:define name="confirmMsg">Are you sure you want to delete this user? This action cannot be undone.</ui:define>
+
+    <ui:define name="content">
+        <h:form id="mainForm">
+
+            <!-- FORM CARD -->
+            <div class="form-card #{userManagementBean.editMode ? 'edit-mode' : ''}">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">
+                            <h:outputText value="&#9998; Edit User"        rendered="#{userManagementBean.editMode}"/>
+                            <h:outputText value="&#128100; Create New User" rendered="#{!userManagementBean.editMode}"/>
+                        </div>
+                        <div class="card-subtitle">
+                            <h:outputText value="Editing user details — update fields and click Save" rendered="#{userManagementBean.editMode}"/>
+                            <h:outputText value="Add Admin, Manager, Staff or Customer user"          rendered="#{!userManagementBean.editMode}"/>
+                        </div>
+                    </div>
+                    <h:panelGroup rendered="#{userManagementBean.editMode}">
+                        <span class="edit-badge">&#9998; Edit Mode</span>
+                    </h:panelGroup>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <h:inputText id="formName" value="#{userManagementBean.formName}"
+                                     required="true" requiredMessage="Full name is required!" maxlength="100"/>
+                        <h:message for="formName" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <h:inputText id="formEmail" value="#{userManagementBean.formEmail}"
+                                     required="#{!userManagementBean.editMode}"
+                                     requiredMessage="Email is required!" maxlength="100"
+                                     disabled="#{userManagementBean.editMode}">
+                            <f:validateRegex pattern="^[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}$"
+                                             rendered="#{!userManagementBean.editMode}"/>
+                        </h:inputText>
+                        <h:message for="formEmail" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <h:panelGroup rendered="#{userManagementBean.editMode}">
+                            <span class="hint">Email cannot be changed</span>
+                        </h:panelGroup>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <h:outputText value="New Password"  rendered="#{userManagementBean.editMode}"/>
+                            <h:outputText value="Password *"    rendered="#{!userManagementBean.editMode}"/>
+                        </label>
+                        <h:inputSecret id="formPassword" value="#{userManagementBean.formPassword}"
+                                       required="#{!userManagementBean.editMode}"
+                                       requiredMessage="Password is required!"
+                                       redisplay="false" maxlength="50"/>
+                        <h:message for="formPassword" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <h:panelGroup rendered="#{userManagementBean.editMode}">
+                            <span class="hint">Leave blank to keep current password</span>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{!userManagementBean.editMode}">
+                            <span class="hint">Minimum 6 characters</span>
+                        </h:panelGroup>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <h:inputText id="formPhone" value="#{userManagementBean.formPhone}" maxlength="15"/>
+                        <h:message for="formPhone" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                        <span class="hint">7-15 digits (optional)</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Organization Name</label>
+                        <h:inputText id="formOrganizationName" value="#{userManagementBean.formOrganizationName}" maxlength="100"/>
+                        <h:message for="formOrganizationName" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Role *</label>
+                        <h:selectOneMenu id="formRoleId" value="#{userManagementBean.formRoleId}"
+                                         required="true" requiredMessage="Please select a role!">
+                            <f:selectItem itemLabel="-- Select Role --" itemValue="0"/>
+                            <f:selectItems value="#{userManagementBean.roleList}" var="role"
+                                           itemValue="#{role.roleId}" itemLabel="#{role.roleName}"/>
+                        </h:selectOneMenu>
+                        <h:message for="formRoleId" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label>Address</label>
+                    <h:inputText id="formAddress" value="#{userManagementBean.formAddress}"
+                                 maxlength="255" style="width:100%;"/>
+                    <h:message for="formAddress" style="color:#ef4444; font-size:12px; margin-top:4px;"/>
+                </div>
+
+                <div class="form-actions">
+                    <h:commandButton value="&#10003; Save Changes"
+                                     action="#{userManagementBean.saveUser()}"
+                                     styleClass="btn #{userManagementBean.editMode ? 'btn-update' : 'btn-primary'}">
+                        <f:ajax execute="@form" render="mainForm growl"/>
+                    </h:commandButton>
+                    <h:panelGroup rendered="#{userManagementBean.editMode}">
+                        <h:commandButton value="&#10007; Cancel" styleClass="btn btn-cancel" immediate="true">
+                            <f:ajax execute="@this" render="mainForm" listener="#{userManagementBean.resetForm()}"/>
+                        </h:commandButton>
+                    </h:panelGroup>
+                </div>
+            </div>
+
+            <!-- USERS TABLE -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128101; All Users</div>
+                        <div class="card-subtitle">
+                            <h:outputText value="#{userManagementBean.userList.size()}"/> users registered
+                        </div>
+                    </div>
+                </div>
+
+                <h:panelGroup rendered="#{not empty userManagementBean.userList}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>User</th><th>Email</th><th>Phone</th>
+                                <th>Organization</th><th>Role</th><th>Status</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <h:dataTable value="#{userManagementBean.userList}" var="user">
+                                <h:column><h:outputText value="#{user.userId}"/></h:column>
+                                <h:column>
+                                    <span class="user-table-avatar">
+                                        <h:outputText value="#{user.name.substring(0,1).toUpperCase()}"/>
+                                    </span>
+                                    <h:outputText value="#{user.name}"/>
+                                </h:column>
+                                <h:column><h:outputText value="#{user.email}"/></h:column>
+                                <h:column><h:outputText value="#{user.phone}"/></h:column>
+                                <h:column><h:outputText value="#{user.organizationName}"/></h:column>
+                                <h:column>
+                                    <span class="badge badge-#{user.roleId.roleName}">
+                                        <h:outputText value="#{user.roleId.roleName}"/>
+                                    </span>
+                                </h:column>
+                                <h:column>
+                                    <h:commandButton value="#{user.status}"
+                                                     styleClass="btn-status #{user.status == 'Active' ? 'btn-status-active' : 'btn-status-inactive'}"
+                                                     immediate="true">
+                                        <f:ajax execute="@this" render="mainForm growl"
+                                                listener="#{userManagementBean.toggleStatus(user)}"/>
+                                    </h:commandButton>
+                                </h:column>
+                                <h:column>
+                                    <div class="action-btns">
+                                        <h:commandButton value="&#9998; Edit" styleClass="btn-edit" immediate="true">
+                                            <f:ajax execute="@this" render="mainForm" listener="#{userManagementBean.loadUserForEdit(user)}"/>
+                                        </h:commandButton>
+                                        <h:commandButton value="&#128465; Delete" styleClass="btn-delete" immediate="true" onclick="showConfirm();">
+                                            <f:ajax execute="@this" render="mainForm" listener="#{userManagementBean.prepareDelete(user.userId)}"/>
+                                        </h:commandButton>
+                                    </div>
+                                </h:column>
+                            </h:dataTable>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{empty userManagementBean.userList}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128100;</div>
+                        <p>No users found. Create your first user above.</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+
+            <h:commandButton id="confirmDeleteBtn" action="#{userManagementBean.confirmDelete()}"
+                             style="display:none;" immediate="true">
+                <f:ajax event="action" execute="@this" render="mainForm growl"/>
+            </h:commandButton>
+
+        </h:form>
+    </ui:define>
+
+    <ui:define name="confirmScript">
+        <script>
+            document.getElementById('confirmYesBtn').addEventListener('click', function() {
+                closeConfirm();
+                document.getElementById('mainForm:confirmDeleteBtn').click();
+            });
+        </script>
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0"
+         metadata-complete="false">
+
+    <!-- ── JSF ── -->
+    <context-param>
+        <param-name>jakarta.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+
+    <!-- Disable JSF redirect to viewId on auth failure so Jakarta Security handles it -->
+    <context-param>
+        <param-name>jakarta.faces.REDIRECT_WITH_XML_DECLARATION</param-name>
+        <param-value>false</param-value>
+    </context-param>
+
+    <!-- ── Faces Servlet ── -->
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>jakarta.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
+
+    <!-- ── Welcome page ── -->
+    <welcome-file-list>
+        <welcome-file>index.xhtml</welcome-file>
+    </welcome-file-list>
+
+    <!-- ── Session timeout: 30 min ── -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <!-- ── Login config ─────────────────────────────────────────────────────
+         Tells the container to use Jakarta Security's custom form mechanism.
+         The actual login page / error page are declared in SecurityConfig.java.
+         Without this block some servers fall back to BASIC auth on 401.
+    ──────────────────────────────────────────────────────────────────────── -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+    </login-config>
+
+    <!-- ── Security constraints ─────────────────────────────────────────────
+         Each protected folder is locked to exactly one role.
+         /register.xhtml is Admin-only (no public self-registration).
+    ──────────────────────────────────────────────────────────────────────── -->
+
+    <!-- Allow product images to be served publicly -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>product-images</web-resource-name>
+            <url-pattern>/product-images/*</url-pattern>
+        </web-resource-collection>
+        <!-- No auth-constraint = publicly accessible -->
+    </security-constraint>
+
+    <!-- Block public registration -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>register</web-resource-name>
+            <url-pattern>/register.xhtml</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>Admin</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- Admin area -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>admin</web-resource-name>
+            <url-pattern>/admin/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>Admin</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- Manager area -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>manager</web-resource-name>
+            <url-pattern>/manager/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>Manager</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- Customer area -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>customer</web-resource-name>
+            <url-pattern>/customer/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>Customer</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- ── Declared roles ── -->
+    <security-role>
+        <role-name>Admin</role-name>
+    </security-role>
+    <security-role>
+        <role-name>Manager</role-name>
+    </security-role>
+    <security-role>
+        <role-name>Customer</role-name>
+    </security-role>
+
+</web-app>

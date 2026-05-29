@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title><ui:insert name="title">Customer - IOS</ui:insert></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <h:outputStylesheet library="css" name="style.css"/>
+    <style>
+        /* Customer teal accent overrides */
+        .sidebar { background: linear-gradient(180deg, #0f172a 0%, #134e4a 100%); }
+        .brand-icon { background: linear-gradient(135deg, #0d9488, #06b6d4); }
+        .nav-item.active { background: linear-gradient(135deg, #0d9488, #06b6d4); box-shadow: 0 4px 12px rgba(13,148,136,0.4); }
+        .user-avatar { background: linear-gradient(135deg, #0d9488, #06b6d4); }
+        .user-role { color: #2dd4bf; }
+    </style>
+    <ui:insert name="extraHead"/>
+</h:head>
+
+<h:body>
+
+    <p:growl id="growl" life="3000" showDetail="false" sticky="false"/>
+
+    <!-- ── SIDEBAR ── -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">
+                <div class="brand-icon">&#128722;</div>
+                <div>
+                    <div class="brand-text">IOS Customer</div>
+                    <div class="brand-sub">Wholesale Marketplace</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-section-title">Browse</div>
+            <a href="dashboard.xhtml" class="nav-item #{activeMenu == 'dashboard' ? 'active' : ''}">
+                <span class="nav-icon">&#128230;</span> Products
+            </a>
+
+            <div class="nav-section-title">My Account</div>
+            <a href="cart.xhtml" class="nav-item #{activeMenu == 'cart' ? 'active' : ''}">
+                <span class="nav-icon">&#128722;</span> My Cart
+                <h:panelGroup rendered="#{!cartBean.cartEmpty}">
+                    <span style="margin-left:auto; background:#0d9488; color:white; border-radius:20px; padding:1px 8px; font-size:11px; font-weight:700;">
+                        <h:outputText value="#{cartBean.cartCount}"/>
+                    </span>
+                </h:panelGroup>
+            </a>
+            <a href="requests.xhtml" class="nav-item #{activeMenu == 'requests' ? 'active' : ''}">
+                <span class="nav-icon">&#128203;</span> My Requests
+            </a>
+            <a href="payment.xhtml" class="nav-item #{activeMenu == 'payment' ? 'active' : ''}">
+                <span class="nav-icon">&#128179;</span> Payments
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">
+                    <h:outputText value="#{userSession.name.substring(0,1).toUpperCase()}"/>
+                </div>
+                <div>
+                    <div class="user-name"><h:outputText value="#{userSession.name}"/></div>
+                    <div class="user-role">Customer</div>
+                </div>
+            </div>
+            <h:form>
+                <h:commandButton value="&#x2192; Logout"
+                                 action="#{loginBean.logout()}"
+                                 styleClass="logout-btn"/>
+            </h:form>
+        </div>
+    </div>
+
+    <!-- ── MAIN ── -->
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1><ui:insert name="pageTitle">Page</ui:insert></h1>
+                <p><ui:insert name="pageSubtitle"/></p>
+            </div>
+            <div class="topbar-right">
+                <ui:insert name="topbarRight"/>
+            </div>
+        </div>
+
+        <ui:insert name="content"/>
+    </div>
+
+</h:body>
+</html>

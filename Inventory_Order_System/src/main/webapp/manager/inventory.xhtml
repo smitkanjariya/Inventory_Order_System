@@ -1,0 +1,316 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/managerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="inventory"/>
+
+    <ui:define name="title">Inventory Analytics - IOS Manager</ui:define>
+    <ui:define name="pageTitle">Inventory Analytics</ui:define>
+    <ui:define name="pageSubtitle">Stock levels, demand trends and restock management</ui:define>
+
+    <ui:define name="extraHead">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <!-- ── Stat Cards ── -->
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:24px;">
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{inventoryAnalyticsBean.products.size()}"/></div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-icon">&#128230;</div>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{inventoryAnalyticsBean.healthyStockCount}"/></div>
+                        <div class="stat-label">Healthy Stock</div>
+                    </div>
+                    <div class="stat-icon">&#10003;</div>
+                </div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{inventoryAnalyticsBean.lowStockCount}"/></div>
+                        <div class="stat-label">Low / Critical</div>
+                    </div>
+                    <div class="stat-icon">&#9888;</div>
+                </div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{inventoryAnalyticsBean.totalStock}"/></div>
+                        <div class="stat-label">Total Units</div>
+                    </div>
+                    <div class="stat-icon">&#128200;</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Charts Row 1: Stock Overview + Demand ── -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+
+            <!-- Stock Overview Bar Chart -->
+            <div class="table-card">
+                <div class="card-title" style="margin-bottom:16px;">&#128200; Stock Overview</div>
+                <div style="position:relative; height:280px;">
+                    <canvas id="stockChart"></canvas>
+                </div>
+                <div style="display:flex; gap:16px; margin-top:12px; font-size:12px;">
+                    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(16,185,129,0.8);border-radius:2px;margin-right:4px;"></span>Healthy</span>
+                    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(251,146,60,0.8);border-radius:2px;margin-right:4px;"></span>Low</span>
+                    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.8);border-radius:2px;margin-right:4px;"></span>Critical</span>
+                </div>
+            </div>
+
+            <!-- Demand Bar Chart -->
+            <div class="table-card">
+                <div class="card-title" style="margin-bottom:16px;">&#128293; Product Demand (Units Sold)</div>
+                <div style="position:relative; height:280px;">
+                    <canvas id="demandChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Charts Row 2: Stock vs Reorder Line + Doughnut ── -->
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px;">
+
+            <!-- Stock vs Reorder Level Line Chart -->
+            <div class="table-card">
+                <div class="card-title" style="margin-bottom:16px;">&#128202; Stock vs Reorder Level</div>
+                <div style="position:relative; height:260px;">
+                    <canvas id="reorderChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Stock Status Doughnut -->
+            <div class="table-card">
+                <div class="card-title" style="margin-bottom:16px;">&#127775; Stock Status</div>
+                <div style="position:relative; height:220px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div style="text-align:center; margin-top:8px; font-size:12px; color:#64748b;">
+                    <h:outputText value="#{inventoryAnalyticsBean.healthyStockCount}"/> healthy ·
+                    <h:outputText value="#{inventoryAnalyticsBean.lowStockCount}"/> low/critical
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Stock Update Table ── -->
+        <h:form id="stockForm">
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128230; Manage Stock &amp; Reorder Levels</div>
+                        <div class="card-subtitle">Update stock units and set minimum reorder limits</div>
+                    </div>
+                    <h:commandButton value="&#8635; Refresh" styleClass="btn-clear"
+                                     action="#{inventoryAnalyticsBean.load()}">
+                        <f:ajax execute="@this" render="stockForm"/>
+                    </h:commandButton>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Current Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Status</th>
+                            <th>Add Units</th>
+                            <th>Min Limit</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ui:repeat value="#{inventoryAnalyticsBean.products}" var="p">
+                            <tr style="#{p.stock le p.reorderLevel ? 'background:#fff5f5;' : ''}">
+                                <td>
+                                    <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{p.name}"/></div>
+                                    <div style="font-size:11px; color:#94a3b8;">&#8377;<h:outputText value="#{p.price}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText></div>
+                                </td>
+                                <td><h:outputText value="#{p.categoryId != null ? p.categoryId.categoryName : '—'}"/></td>
+                                <td>
+                                    <span style="font-size:18px; font-weight:700; color:#{p.stock le p.reorderLevel ? '#ef4444' : '#10b981'};">
+                                        <h:outputText value="#{p.stock}"/>
+                                    </span>
+                                </td>
+                                <td style="color:#64748b; font-weight:600;"><h:outputText value="#{p.reorderLevel}"/></td>
+                                <td>
+                                    <span class="badge #{p.stock == 0 ? 'badge-Cancelled' : p.stock le p.reorderLevel ? 'badge-Pending' : 'badge-Approved'}">
+                                        <h:outputText value="#{p.stock == 0 ? 'Out of Stock' : p.stock le p.reorderLevel ? 'Low Stock' : 'In Stock'}"/>
+                                    </span>
+                                </td>
+
+                                <!-- Inline edit when this product is selected -->
+                                <td>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId == p.productId}">
+                                        <h:inputText value="#{inventoryAnalyticsBean.addStock}"
+                                                     style="width:70px; padding:4px 8px; border:1px solid #0d9488; border-radius:6px; font-size:13px;"
+                                                     placeholder="0"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId != p.productId}">
+                                        <span style="color:#94a3b8; font-size:13px;">—</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId == p.productId}">
+                                        <h:inputText value="#{inventoryAnalyticsBean.newReorderLevel}"
+                                                     style="width:70px; padding:4px 8px; border:1px solid #0d9488; border-radius:6px; font-size:13px;"
+                                                     placeholder="0"/>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId != p.productId}">
+                                        <span style="color:#94a3b8; font-size:13px;">—</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId != p.productId}">
+                                        <h:commandButton value="&#9998; Update" styleClass="btn-edit" immediate="true">
+                                            <f:ajax execute="@this" render="stockForm"
+                                                    listener="#{inventoryAnalyticsBean.prepareEdit(p)}"/>
+                                        </h:commandButton>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{inventoryAnalyticsBean.editProductId == p.productId}"
+                                                  style="display:flex; gap:6px;">
+                                        <h:commandButton value="&#10003; Save" styleClass="btn-accept">
+                                            <f:ajax execute="stockForm" render="stockForm growl"
+                                                    listener="#{inventoryAnalyticsBean.saveStock()}"/>
+                                        </h:commandButton>
+                                        <h:commandButton value="&#10007;" styleClass="btn-reject" immediate="true">
+                                            <f:ajax execute="@this" render="stockForm"
+                                                    listener="#{inventoryAnalyticsBean.cancelEdit()}"/>
+                                        </h:commandButton>
+                                    </h:panelGroup>
+                                </td>
+                            </tr>
+                        </ui:repeat>
+                    </tbody>
+                </table>
+
+                <h:panelGroup rendered="#{empty inventoryAnalyticsBean.products}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128230;</div>
+                        <p>No products found. Add products first.</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+        </h:form>
+
+        <!-- ── Chart.js init ── -->
+        <script>
+            var labels   = #{inventoryAnalyticsBean.labelsJson};
+            var stocks   = #{inventoryAnalyticsBean.stockJson};
+            var reorders = #{inventoryAnalyticsBean.reorderJson};
+            var demands  = #{inventoryAnalyticsBean.demandJson};
+            var colors   = #{inventoryAnalyticsBean.stockColorsJson};
+
+            // 1. Stock Overview Bar
+            new Chart(document.getElementById('stockChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Current Stock',
+                        data: stocks,
+                        backgroundColor: colors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // 2. Demand Bar (sorted descending)
+            var demandPairs = labels.map(function(l,i){ return {label:l, val:demands[i]}; });
+            demandPairs.sort(function(a,b){ return b.val - a.val; });
+            var demandColors = demandPairs.map(function(d,i){
+                var ratio = i / Math.max(demandPairs.length - 1, 1);
+                return 'rgba(' + Math.round(99 + 156*ratio) + ',' + Math.round(102 - 50*ratio) + ',241,0.8)';
+            });
+            new Chart(document.getElementById('demandChart'), {
+                type: 'bar',
+                data: {
+                    labels: demandPairs.map(function(d){ return d.label; }),
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: demandPairs.map(function(d){ return d.val; }),
+                        backgroundColor: demandColors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+                }
+            });
+
+            // 3. Stock vs Reorder Line
+            new Chart(document.getElementById('reorderChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Current Stock',
+                            data: stocks,
+                            borderColor: '#0d9488',
+                            backgroundColor: 'rgba(13,148,136,0.1)',
+                            fill: true, tension: 0.4, pointRadius: 5,
+                            pointBackgroundColor: '#0d9488'
+                        },
+                        {
+                            label: 'Reorder Level',
+                            data: reorders,
+                            borderColor: '#ef4444',
+                            borderDash: [6,3],
+                            backgroundColor: 'transparent',
+                            tension: 0.4, pointRadius: 4,
+                            pointBackgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // 4. Status Doughnut
+            var healthy  = #{inventoryAnalyticsBean.healthyStockCount};
+            var lowStock = #{inventoryAnalyticsBean.lowStockCount};
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Healthy', 'Low / Critical'],
+                    datasets: [{
+                        data: [healthy, lowStock],
+                        backgroundColor: ['rgba(16,185,129,0.85)', 'rgba(239,68,68,0.85)'],
+                        borderWidth: 2, borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+                    cutout: '65%'
+                }
+            });
+        </script>
+
+    </ui:define>
+</ui:composition>

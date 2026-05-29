@@ -1,0 +1,182 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/customerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="dashboard"/>
+
+    <ui:define name="title">Product Details - IOS Customer</ui:define>
+    <ui:define name="pageTitle">Product Details</ui:define>
+    <ui:define name="pageSubtitle">Full information about the selected product</ui:define>
+
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{cartBean.initQuantity}"/>
+
+        <!-- Guard: redirect back if no product selected -->
+        <h:panelGroup rendered="#{customerDashboardBean.selectedProduct == null}">
+            <div class="empty-state" style="background:white; border-radius:16px; padding:60px 20px; border:1px solid #f1f5f9;">
+                <div class="empty-icon">&#128230;</div>
+                <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:16px;">No product selected.</p>
+                <h:form>
+                    <h:commandButton value="&#8592; Back to Products"
+                                     action="#{customerDashboardBean.backToDashboard()}"
+                                     styleClass="btn-teal"/>
+                </h:form>
+            </div>
+        </h:panelGroup>
+
+        <!-- Product detail card -->
+        <h:panelGroup rendered="#{customerDashboardBean.selectedProduct != null}">
+
+            <div class="detail-card">
+
+                <!-- Product Image -->
+                <h:panelGroup rendered="#{not empty customerDashboardBean.selectedProduct.productImage}">
+                    <div style="margin-bottom:24px; border-radius:12px; overflow:hidden; max-height:320px;">
+                        <img src="#{request.contextPath}/product-images/#{customerDashboardBean.selectedProduct.productImage}"
+                             style="width:100%; max-height:320px; object-fit:cover; border-radius:12px; border:1px solid #f1f5f9;"
+                             alt="#{customerDashboardBean.selectedProduct.name}"/>
+                    </div>
+                </h:panelGroup>
+
+                <!-- Header -->
+                <div class="detail-header">
+                    <div class="detail-icon">&#128230;</div>
+                    <div>
+                        <div class="detail-title">
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.name}"/>
+                        </div>
+                        <div class="detail-category">
+                            &#128193;
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.categoryId != null
+                                                   ? customerDashboardBean.selectedProduct.categoryId.categoryName
+                                                   : 'Uncategorized'}"/>
+                        </div>
+                        <div class="detail-manager">
+                            &#127970;
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.managerId != null
+                                                   ? customerDashboardBean.selectedProduct.managerId.organizationName
+                                                   : 'Unknown Supplier'}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key info grid -->
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Price</label>
+                        <div class="detail-value price">
+                            &#8377;<h:outputText value="#{customerDashboardBean.selectedProduct.price}">
+                                <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                            </h:outputText>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Stock Quantity</label>
+                        <div class="detail-value">
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.stock}"/>
+                            <span style="font-size:13px; font-weight:400; color:#64748b;"> units</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Product Name</label>
+                        <div class="detail-value" style="font-size:15px;">
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.name}"/>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Manager / Supplier</label>
+                        <div class="detail-value" style="font-size:14px; line-height:1.6;">
+                            <h:panelGroup rendered="#{customerDashboardBean.selectedProduct.managerId != null}">
+                                <div style="font-weight:700; color:#0f766e;">
+                                    <h:outputText value="#{customerDashboardBean.selectedProduct.managerId.name}"/>
+                                </div>
+                                <div style="font-size:13px; color:#475569;">
+                                    &#127970; <h:outputText value="#{customerDashboardBean.selectedProduct.managerId.organizationName}"/>
+                                </div>
+                                <div style="font-size:13px; color:#475569;">
+                                    &#9993; <h:outputText value="#{customerDashboardBean.selectedProduct.managerId.email}"/>
+                                </div>
+                                <h:panelGroup rendered="#{not empty customerDashboardBean.selectedProduct.managerId.phone}">
+                                    <div style="font-size:13px; color:#475569;">
+                                        &#128222; <h:outputText value="#{customerDashboardBean.selectedProduct.managerId.phone}"/>
+                                    </div>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{customerDashboardBean.selectedProduct.managerId == null}">
+                                <span style="color:#94a3b8;">—</span>
+                            </h:panelGroup>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Min. Order Qty</label>
+                        <div class="detail-value" style="font-size:15px;">
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.minOrderQuantity != null ? customerDashboardBean.selectedProduct.minOrderQuantity : 1}"/>
+                            <span style="font-size:13px; font-weight:400; color:#64748b;"> units</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Listed On</label>
+                        <div class="detail-value" style="font-size:15px;">
+                            <h:outputText value="#{customerDashboardBean.selectedProduct.createdAt}">
+                                <f:convertDateTime pattern="dd MMM yyyy"/>
+                            </h:outputText>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <h:panelGroup rendered="#{not empty customerDashboardBean.selectedProduct.description}">
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">Description</label>
+                    </div>
+                    <div class="detail-desc-box">
+                        <h:outputText value="#{customerDashboardBean.selectedProduct.description}"/>
+                    </div>
+                </h:panelGroup>
+
+                <!-- Actions -->
+                <div class="detail-actions">
+                    <h:form id="cartForm">
+                        <h:panelGroup rendered="#{customerDashboardBean.selectedProduct.stock gt 0}">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px;">
+                                <label style="font-size:13px; font-weight:600; color:#374151; white-space:nowrap;">
+                                    Quantity
+                                    <h:panelGroup rendered="#{customerDashboardBean.selectedProduct.minOrderQuantity != null and customerDashboardBean.selectedProduct.minOrderQuantity gt 1}">
+                                        <span style="font-size:11px; color:#0d9488; font-weight:500;">(min: #{customerDashboardBean.selectedProduct.minOrderQuantity})</span>
+                                    </h:panelGroup>
+                                    :
+                                </label>
+                                <h:inputText value="#{cartBean.addQuantity}"
+                                             style="width:70px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;"
+                                             onkeypress="return event.charCode &gt;= 48 &amp;&amp; event.charCode &lt;= 57"/>
+                                <h:commandButton value="&#128722; Add to Cart"
+                                                 action="#{cartBean.addToCart(customerDashboardBean.selectedProduct)}"
+                                                 styleClass="btn-teal">
+                                    <f:ajax execute="@form" render="@form growl"/>
+                                </h:commandButton>
+                                <h:commandButton value="&#128722; View Cart"
+                                                 action="#{cartBean.goToCart()}"
+                                                 styleClass="btn-back"
+                                                 rendered="#{!cartBean.cartEmpty}"/>
+                            </div>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{customerDashboardBean.selectedProduct.stock == 0}">
+                            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-bottom:16px; font-size:13px; color:#b91c1c; font-weight:600;">
+                                &#10007; This product is out of stock and cannot be added to cart.
+                            </div>
+                        </h:panelGroup>
+                        <h:commandButton value="&#8592; Back to Products"
+                                         action="#{customerDashboardBean.backToDashboard()}"
+                                         styleClass="btn-back"/>
+                    </h:form>
+                </div>
+
+            </div>
+
+        </h:panelGroup>
+
+    </ui:define>
+
+</ui:composition>

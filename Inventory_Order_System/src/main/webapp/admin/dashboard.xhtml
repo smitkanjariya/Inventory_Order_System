@@ -1,0 +1,137 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/adminLayout.xhtml">
+
+    <ui:param name="activeMenu" value="dashboard"/>
+
+    <ui:define name="title">Admin Dashboard - IOS</ui:define>
+    <ui:define name="pageTitle">Dashboard</ui:define>
+    <ui:define name="pageSubtitle">Welcome back, <h:outputText value="#{userSession.name}"/>! Here's your overview.</ui:define>
+
+    <ui:define name="topbarRight">
+        <div class="date-badge">
+            &#128197;
+            <h:outputText value="#{now}">
+                <f:convertDateTime pattern="EEE, dd MMM yyyy"/>
+            </h:outputText>
+        </div>
+    </ui:define>
+
+    <ui:define name="content">
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{adminDashboardBean.userCount}"/></div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-icon">&#128100;</div>
+                </div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{adminDashboardBean.productCount}"/></div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-icon">&#128230;</div>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><h:outputText value="#{adminDashboardBean.orderCount}"/></div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-icon">&#128203;</div>
+                </div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">
+                            &#8377;<h:outputText value="#{adminDashboardBean.totalRevenue}">
+                                <f:convertNumber maxFractionDigits="0"/>
+                            </h:outputText>
+                        </div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-icon">&#128176;</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Grid -->
+        <div class="bottom-grid">
+
+            <!-- Recent Orders -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Recent Orders</div>
+                        <div class="section-subtitle">Last 5 orders placed</div>
+                    </div>
+                    <a href="orders.xhtml" class="view-all">View all &#8594;</a>
+                </div>
+
+                <h:dataTable value="#{adminDashboardBean.recentOrders}" var="order"
+                             styleClass="data-table"
+                             rendered="#{not empty adminDashboardBean.recentOrders}">
+                    <h:column>
+                        <f:facet name="header">Order ID</f:facet>
+                        <span style="font-weight:600; color:#6366f1;">#<h:outputText value="#{order.orderId}"/></span>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Customer</f:facet>
+                        <h:outputText value="#{order.userId.name}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Date</f:facet>
+                        <h:outputText value="#{order.orderDate}">
+                            <f:convertDateTime pattern="dd MMM yyyy"/>
+                        </h:outputText>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Amount</f:facet>
+                        <span style="font-weight:600;">&#8377;<h:outputText value="#{order.totalAmount}"/></span>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Status</f:facet>
+                        <span class="badge badge-#{order.status}">
+                            <h:outputText value="#{order.status}"/>
+                        </span>
+                    </h:column>
+                </h:dataTable>
+
+                <h:panelGroup rendered="#{empty adminDashboardBean.recentOrders}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128203;</div>
+                        <p>No orders yet</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Quick Actions</div>
+                        <div class="section-subtitle">Common tasks</div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <a href="manageUsers.xhtml" class="action-btn purple"><span class="action-icon">&#128100;</span> Manage Users</a>
+                    <a href="managerReports.xhtml" class="action-btn teal"><span class="action-icon">&#128202;</span> Manager Reports</a>
+                    <a href="payments.xhtml"    class="action-btn green"><span class="action-icon">&#128179;</span> Payments</a>
+                    <a href="reports.xhtml"     class="action-btn orange"><span class="action-icon">&#128196;</span> Reports</a>
+                </div>
+            </div>
+
+        </div>
+    </ui:define>
+
+</ui:composition>

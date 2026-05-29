@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Login - Inventory Order System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            background-color: #ffffff;
+            padding: 45px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 420px;
+        }
+
+        .login-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 26px;
+        }
+
+        .login-container p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #dce1e7;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #2980b9;
+        }
+
+        .error-msg {
+            background-color: #fdecea;
+            color: #e74c3c;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .register-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #3498db;
+            font-size: 32px;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="login-container">
+
+        <div class="logo">&#128230;</div>
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Inventory &amp; Order Management System</p>
+
+        <h:form id="loginForm">
+
+            <!-- Error Message -->
+            <h:panelGroup rendered="#{not empty loginBean.errorMessage}">
+                <div class="error-msg">
+                    <h:outputText value="#{loginBean.errorMessage}"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <h:inputText id="email" value="#{loginBean.email}"
+                             required="true"
+                             requiredMessage="Email is required"
+                             styleClass="input-field"/>
+                <h:message for="email" style="color:#e74c3c; font-size:12px;"/>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password">Password</label>
+                <h:inputSecret id="password" value="#{loginBean.password}"
+                               required="true"
+                               requiredMessage="Password is required"
+                               redisplay="false"
+                               styleClass="input-field"/>
+                <h:message for="password" style="color:#e74c3c; font-size:12px;"/>
+            </div>
+
+            <!-- Login Button -->
+            <h:commandButton value="Login"
+                             action="#{loginBean.login()}"
+                             styleClass="btn-login"/>
+
+        </h:form>
+
+        <div class="register-link" style="color:#94a3b8; font-size:13px; text-align:center; margin-top:20px;">
+            Contact your administrator to create an account.
+        </div>
+
+    </div>
+</h:body>
+</html>

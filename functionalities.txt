@@ -1,0 +1,92 @@
+1. User Management
+Register new user (Admin only)
+
+Login (all roles)
+
+View all users (Admin)
+
+Edit user details (Admin)
+
+Delete user (Admin)
+
+Role assignment (Admin)
+
+2. Category Management
+Add category (Admin/Staff)
+
+Edit category (Admin/Staff)
+
+Delete category (Admin)
+
+View all categories (all roles)
+
+3. Product Management
+Add product (Admin/Staff)
+
+Edit product (Admin/Staff)
+
+Delete product (Admin)
+
+View all products (Admin/Manager/Staff)
+
+View low stock products (Admin/Manager/Staff)
+
+Filter products by category
+
+4. Order Management
+Place order (Customer)
+
+View own orders (Customer)
+
+View all orders (Admin/Manager)
+
+Approve/Reject order (Manager)
+
+Cancel order (Customer/Manager)
+
+View order details + items
+
+5. Inventory Management
+View all inventory (Admin/Manager/Staff)
+
+Update stock in/out (Staff)
+
+View low stock alert (Admin/Manager/Staff)
+
+6. Payment Management
+Make payment (Customer)
+
+View payment by order (Customer/Admin)
+
+Update payment status (Admin)
+
+View all payments (Admin)
+
+7. Reports
+Sales report (Admin/Manager)
+
+Inventory report (Admin/Manager)
+
+Low stock report (Admin/Manager)
+
+Orders by status report (Admin/Manager)
+
+Payment report (Admin/Manager)
+
+8. Dashboard (per role)
+Admin → users, products, orders, reports summary
+
+Manager → orders, reports summary
+
+Staff → inventory, products summary
+
+Customer → own orders, payment status
+
+9. Login & Security
+Login page
+
+Role-based redirect to dashboard
+
+Logout
+
+Page access restriction by role

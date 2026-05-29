@@ -1,0 +1,225 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/managerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="monthlyReport"/>
+
+    <ui:define name="title">Monthly Report - IOS Manager</ui:define>
+    <ui:define name="pageTitle">Monthly Report</ui:define>
+    <ui:define name="pageSubtitle">Month-wise sales and payment summary</ui:define>
+
+    <ui:define name="content">
+        <h:form id="reportForm">
+
+            <!-- Year selector -->
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+                <span style="font-size:14px; font-weight:600; color:#374151;">Select Year:</span>
+                <h:selectOneMenu value="#{managerMonthlyReportBean.selectedYear}"
+                                 style="padding:8px 14px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; font-weight:600; color:#0f172a; background:white; cursor:pointer;"
+                                 onchange="this.form.querySelector('[id$=loadBtn]').click();">
+                    <f:selectItems value="#{managerMonthlyReportBean.availableYears}" var="y"
+                                   itemValue="#{y}" itemLabel="#{y}"/>
+                    <f:ajax execute="@this" render="reportForm" listener="#{managerMonthlyReportBean.loadReport()}"/>
+                </h:selectOneMenu>
+                <h:commandButton id="loadBtn" value="&#128200; Load Report" styleClass="btn-teal"
+                                 action="#{managerMonthlyReportBean.loadReport()}">
+                    <f:ajax execute="@form" render="reportForm"/>
+                </h:commandButton>
+            </div>
+
+            <!-- Summary stat cards -->
+            <div class="stats-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:24px;">
+                <div class="stat-card blue">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" style="font-size:22px;">
+                                &#8377;<h:outputText value="#{managerMonthlyReportBean.yearTotalRevenue}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                            </div>
+                            <div class="stat-label">Total Revenue (<h:outputText value="#{managerMonthlyReportBean.selectedYear}"/>)</div>
+                        </div>
+                        <div class="stat-icon">&#128176;</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{managerMonthlyReportBean.yearTotalProducts}"/></div>
+                            <div class="stat-label">Units Sold</div>
+                        </div>
+                        <div class="stat-icon">&#128230;</div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{managerMonthlyReportBean.yearTotalRequests}"/></div>
+                            <div class="stat-label">Orders Fulfilled</div>
+                        </div>
+                        <div class="stat-icon">&#10003;</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:white;">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value" style="color:white;">
+                                <h:outputText value="#{managerMonthlyReportBean.bestMonth != null ? managerMonthlyReportBean.bestMonth.monthName : '—'}"/>
+                            </div>
+                            <div class="stat-label" style="color:rgba(255,255,255,0.8);">Best Month</div>
+                        </div>
+                        <div class="stat-icon">&#127942;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly breakdown table -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128200; Month-wise Breakdown — <h:outputText value="#{managerMonthlyReportBean.selectedYear}"/></div>
+                        <div class="card-subtitle">Sales and payment summary for each month</div>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Orders Fulfilled</th>
+                            <th>Units Sold</th>
+                            <th>Payments Received</th>
+                            <th>Revenue</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ui:repeat value="#{managerMonthlyReportBean.monthRows}" var="row">
+                            <tr style="#{row.hasData ? 'background:#f8fafc;' : ''}">
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="width:36px; height:36px; border-radius:8px;
+                                                    background:#{row.hasData ? 'linear-gradient(135deg,#0d9488,#06b6d4)' : '#f1f5f9'};
+                                                    display:flex; align-items:center; justify-content:center;
+                                                    font-size:13px; font-weight:700;
+                                                    color:#{row.hasData ? 'white' : '#94a3b8'};">
+                                            <h:outputText value="#{row.monthNum}"/>
+                                        </div>
+                                        <span style="font-weight:600; color:#0f172a;">
+                                            <h:outputText value="#{row.monthName}"/>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{row.requestCount gt 0}">
+                                        <span style="font-weight:700; color:#0d9488;">
+                                            <h:outputText value="#{row.requestCount}"/>
+                                        </span>
+                                        <span style="font-size:11px; color:#64748b;"> orders</span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{row.requestCount == 0}">
+                                        <span style="color:#cbd5e1;">—</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{row.productsSold gt 0}">
+                                        <span style="font-weight:700; color:#6366f1;">
+                                            <h:outputText value="#{row.productsSold}"/>
+                                        </span>
+                                        <span style="font-size:11px; color:#64748b;"> units</span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{row.productsSold == 0}">
+                                        <span style="color:#cbd5e1;">—</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{row.paymentCount gt 0}">
+                                        <span style="font-weight:600; color:#0f172a;">
+                                            <h:outputText value="#{row.paymentCount}"/>
+                                        </span>
+                                        <span style="font-size:11px; color:#64748b;"> payment(s)</span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{row.paymentCount == 0}">
+                                        <span style="color:#cbd5e1;">—</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{row.revenue gt 0}">
+                                        <span style="font-size:16px; font-weight:700; color:#0d9488;">
+                                            &#8377;<h:outputText value="#{row.revenue}">
+                                                <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                            </h:outputText>
+                                        </span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{row.revenue == 0}">
+                                        <span style="color:#cbd5e1;">&#8377;0.00</span>
+                                    </h:panelGroup>
+                                </td>
+                                <td>
+                                    <h:panelGroup rendered="#{row.hasData}">
+                                        <span class="badge badge-Approved">&#10003; Active</span>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{!row.hasData}">
+                                        <span class="badge badge-Pending">No Activity</span>
+                                    </h:panelGroup>
+                                </td>
+                            </tr>
+                        </ui:repeat>
+                    </tbody>
+                    <!-- Total row -->
+                    <tfoot>
+                        <tr style="background:#0f172a; color:white;">
+                            <td style="font-weight:700; color:white; padding:12px 16px;">
+                                &#931; Total — <h:outputText value="#{managerMonthlyReportBean.selectedYear}"/>
+                            </td>
+                            <td style="font-weight:700; color:#34d399; padding:12px 16px;">
+                                <h:outputText value="#{managerMonthlyReportBean.yearTotalRequests}"/> orders
+                            </td>
+                            <td style="font-weight:700; color:#818cf8; padding:12px 16px;">
+                                <h:outputText value="#{managerMonthlyReportBean.yearTotalProducts}"/> units
+                            </td>
+                            <td style="color:#94a3b8; padding:12px 16px;">—</td>
+                            <td style="font-weight:700; color:#34d399; font-size:16px; padding:12px 16px;">
+                                &#8377;<h:outputText value="#{managerMonthlyReportBean.yearTotalRevenue}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                            </td>
+                            <td style="padding:12px 16px;">—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Month-wise bar chart (CSS only) -->
+            <div class="table-card" style="margin-top:20px;">
+                <div class="card-title" style="margin-bottom:16px;">&#128202; Revenue Bar Chart — <h:outputText value="#{managerMonthlyReportBean.selectedYear}"/></div>
+                <div style="display:flex; align-items:flex-end; gap:8px; height:160px; padding:0 8px;">
+                    <ui:repeat value="#{managerMonthlyReportBean.monthRows}" var="row">
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                            <!-- bar height proportional: max 140px -->
+                            <div style="font-size:9px; color:#64748b; font-weight:600;">
+                                <h:panelGroup rendered="#{row.revenue gt 0}">
+                                    &#8377;<h:outputText value="#{row.revenue}">
+                                        <f:convertNumber maxFractionDigits="0"/>
+                                    </h:outputText>
+                                </h:panelGroup>
+                            </div>
+                            <div style="width:100%; border-radius:4px 4px 0 0;
+                                        background:#{row.hasData ? 'linear-gradient(180deg,#0d9488,#06b6d4)' : '#f1f5f9'};
+                                        min-height:4px;
+                                        height:#{row.getBarHeight(managerMonthlyReportBean.yearTotalRevenue)}px;">
+                            </div>
+                            <div style="font-size:9px; color:#64748b; font-weight:600; text-align:center;">
+                                <h:outputText value="#{row.monthName.substring(0,3)}"/>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </div>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,311 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/managerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="requests"/>
+
+    <ui:define name="title">Requests - IOS Manager</ui:define>
+    <ui:define name="pageTitle">Customer Requests</ui:define>
+    <ui:define name="pageSubtitle">Review and respond to product requests from customers</ui:define>
+
+    <ui:define name="content">
+        <h:form id="requestForm">
+
+            <!-- Stat cards -->
+            <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:20px;">
+                <div class="stat-card orange">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{requestBean.pendingCount}"/></div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-icon">&#9203;</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{requestBean.acceptedCount}"/></div>
+                            <div class="stat-label">Accepted</div>
+                        </div>
+                        <div class="stat-icon">&#10003;</div>
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{requestBean.rejectedCount}"/></div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                        <div class="stat-icon">&#10007;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION 1 — ACCEPTED ORDERS grouped by customer
+            ══════════════════════════════════════════════════ -->
+            <h:panelGroup rendered="#{not empty requestBean.acceptedGroups}" layout="block">
+
+                <div style="font-size:16px; font-weight:700; color:#0f172a; margin-bottom:16px;">
+                    &#128203; Accepted Orders — By Customer
+                </div>
+
+                <ui:repeat value="#{requestBean.acceptedGroups}" var="group">
+                    <div class="table-card" style="margin-bottom:20px; border:2px solid #{group.paid ? '#10b981' : '#0d9488'};">
+
+                        <!-- Customer header -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#0d9488,#06b6d4); display:flex; align-items:center; justify-content:center; font-size:22px; color:white;">
+                                    &#128100;
+                                </div>
+                                <div>
+                                    <div style="font-size:16px; font-weight:700; color:#0f172a;">
+                                        <h:outputText value="#{group.customer.name}"/>
+                                    </div>
+                                    <div style="font-size:12px; color:#64748b;">
+                                        &#9993; <h:outputText value="#{group.customer.email}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <h:panelGroup rendered="#{group.paid}">
+                                <span class="badge badge-Approved" style="font-size:13px; padding:6px 16px;">&#10003; Payment Received</span>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- Products table -->
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Unit Price</th>
+                                    <th>Qty</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ui:repeat value="#{group.requests}" var="req">
+                                    <tr>
+                                        <td style="color:#6366f1; font-weight:600;">#<h:outputText value="#{req.requestId}"/></td>
+                                        <td>
+                                            <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{req.productId.name}"/></div>
+                                        </td>
+                                        <td><h:outputText value="#{req.productId.categoryId != null ? req.productId.categoryId.categoryName : '—'}"/></td>
+                                        <td>&#8377;<h:outputText value="#{req.productId.price}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText></td>
+                                        <td><strong><h:outputText value="#{req.quantity}"/></strong></td>
+                                        <td style="font-weight:700; color:#0d9488;">
+                                            &#8377;<h:outputText value="#{req.productId.price.multiply(req.quantity)}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </tbody>
+                        </table>
+
+                        <!-- Total + Download row -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:14px; border-top:2px solid #f1f5f9;">
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <div>
+                                    <span style="font-size:13px; color:#64748b; font-weight:600;">Total Amount:</span>
+                                    <span style="font-size:22px; font-weight:700; color:#0d9488; margin-left:10px;">
+                                        &#8377;<h:outputText value="#{group.total}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                    </span>
+                                </div>
+                                <a href="#{request.contextPath}/download-report?type=pre&amp;managerId=#{userSession.userId}&amp;customerId=#{group.customer.userId}"
+                                   style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#ede9fe; color:#6d28d9; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                                    &#128196; Download Pre-Report
+                                </a>
+                            </div>
+                            <h:panelGroup rendered="#{!group.paid}">
+                                <div style="background:#fef3c7; color:#92400e; border:1px solid #fbbf24; border-radius:10px; padding:10px 24px; font-size:13px; font-weight:600;">
+                                    &#9203; Awaiting Payment
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{group.paid}">
+                                <div style="background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:700;">
+                                    &#10003; Payment Received
+                                </div>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- POST-PAYMENT RECEIPT (shown after customer pays) -->
+                        <h:panelGroup rendered="#{group.paid and not empty group.receipts}" layout="block">
+                            <div style="margin-top:20px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                    <div style="font-size:13px; font-weight:700; color:#065f46;">
+                                        &#128196; Payment Receipt — <h:outputText value="#{group.customer.name}"/>
+                                    </div>
+                                    <a href="#{request.contextPath}/download-report?type=post&amp;managerId=#{userSession.userId}&amp;customerId=#{group.customer.userId}"
+                                       style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#065f46; color:white; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                                        &#128196; Download Receipt PDF
+                                    </a>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Receipt #</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Date &amp; Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{group.receipts}" var="pay">
+                                            <tr>
+                                                <td style="font-weight:600; color:#6366f1;">#<h:outputText value="#{pay.paymentId}"/></td>
+                                                <td style="font-weight:700; color:#0d9488;">
+                                                    &#8377;<h:outputText value="#{pay.totalAmount}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-Approved">
+                                                        <h:outputText value="#{pay.status}"/>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <h:outputText value="#{pay.paymentDate}">
+                                                        <f:convertDateTime pattern="dd MMM yyyy, hh:mm a"/>
+                                                    </h:outputText>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+
+                    </div>
+                </ui:repeat>
+            </h:panelGroup>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION 2 — ALL REQUESTS TABLE with filter tabs
+            ══════════════════════════════════════════════════ -->
+
+            <!-- Filter tabs -->
+            <div class="filter-tabs">
+                <h:commandButton value="All" immediate="true"
+                                 styleClass="tab-btn #{requestBean.activeFilter == 'ALL' ? 'active' : ''}">
+                    <f:ajax execute="@this" render="requestForm"
+                            listener="#{requestBean.setFilter('ALL')}"/>
+                </h:commandButton>
+                <h:commandButton value="Pending (#{requestBean.pendingCount})" immediate="true"
+                                 styleClass="tab-btn #{requestBean.activeFilter == 'PENDING' ? 'active' : ''}">
+                    <f:ajax execute="@this" render="requestForm"
+                            listener="#{requestBean.setFilter('PENDING')}"/>
+                </h:commandButton>
+                <h:commandButton value="Accepted (#{requestBean.acceptedCount})" immediate="true"
+                                 styleClass="tab-btn #{requestBean.activeFilter == 'ACCEPTED' ? 'active' : ''}">
+                    <f:ajax execute="@this" render="requestForm"
+                            listener="#{requestBean.setFilter('ACCEPTED')}"/>
+                </h:commandButton>
+                <h:commandButton value="Rejected (#{requestBean.rejectedCount})" immediate="true"
+                                 styleClass="tab-btn #{requestBean.activeFilter == 'REJECTED' ? 'active' : ''}">
+                    <f:ajax execute="@this" render="requestForm"
+                            listener="#{requestBean.setFilter('REJECTED')}"/>
+                </h:commandButton>
+            </div>
+
+            <!-- Requests table -->
+            <div class="table-card">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128203; All Requests</div>
+                        <div class="card-subtitle">
+                            <h:outputText value="#{requestBean.filteredRequests.size()}"/> requests
+                        </div>
+                    </div>
+                </div>
+
+                <h:panelGroup rendered="#{not empty requestBean.filteredRequests}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Customer</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat value="#{requestBean.filteredRequests}" var="r">
+                                <tr>
+                                    <td style="font-weight:600; color:#6366f1;">#<h:outputText value="#{r.requestId}"/></td>
+                                    <td>
+                                        <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{r.productId.name}"/></div>
+                                        <div style="font-size:12px; color:#94a3b8;"><h:outputText value="#{r.productId.categoryId != null ? r.productId.categoryId.categoryName : '—'}"/></div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{r.customerId.name}"/></div>
+                                        <div style="font-size:12px; color:#94a3b8;"><h:outputText value="#{r.customerId.email}"/></div>
+                                    </td>
+                                    <td><span style="font-weight:600;"><h:outputText value="#{r.quantity}"/></span></td>
+                                    <td>&#8377;<h:outputText value="#{r.productId.price}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText></td>
+                                    <td style="font-weight:700; color:#0d9488;">
+                                        &#8377;<h:outputText value="#{r.productId.price.multiply(r.quantity)}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                    </td>
+                                    <td>
+                                        <h:outputText value="#{r.createdAt}">
+                                            <f:convertDateTime pattern="dd MMM yyyy"/>
+                                        </h:outputText>
+                                    </td>
+                                    <td>
+                                        <span class="badge #{r.status.name() == 'PENDING' ? 'badge-Pending' : r.status.name() == 'ACCEPTED' ? 'badge-Approved' : r.status.name() == 'PAID' ? 'badge-instock' : 'badge-Cancelled'}">
+                                            <h:outputText value="#{r.status}"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <h:panelGroup rendered="#{r.status.name() == 'PENDING'}">
+                                            <div class="action-btns">
+                                                <h:commandButton value="&#10003; Accept" styleClass="btn-accept" immediate="true">
+                                                    <f:ajax execute="@this" render="requestForm growl"
+                                                            listener="#{requestBean.acceptRequest(r)}"/>
+                                                </h:commandButton>
+                                                <h:commandButton value="&#10007; Reject" styleClass="btn-reject" immediate="true">
+                                                    <f:ajax execute="@this" render="requestForm growl"
+                                                            listener="#{requestBean.rejectRequest(r)}"/>
+                                                </h:commandButton>
+                                            </div>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{r.status.name() == 'ACCEPTED'}">
+                                            <a href="#{request.contextPath}/download-report?type=pre&amp;managerId=#{userSession.userId}&amp;customerId=#{r.customerId.userId}&amp;requestId=#{r.requestId}"
+                                               style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#ede9fe; color:#6d28d9; border-radius:7px; font-size:11px; font-weight:600; text-decoration:none;">
+                                                &#128196; Download Pre-Report
+                                            </a>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{r.status.name() == 'PAID'}">
+                                            <a href="#{request.contextPath}/download-report?type=post&amp;managerId=#{userSession.userId}&amp;customerId=#{r.customerId.userId}&amp;requestId=#{r.requestId}"
+                                               style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#d1fae5; color:#065f46; border-radius:7px; font-size:11px; font-weight:600; text-decoration:none;">
+                                                &#128196; Download Receipt
+                                            </a>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{r.status.name() == 'REJECTED'}">
+                                            <span style="color:#94a3b8; font-size:13px;">—</span>
+                                        </h:panelGroup>
+                                    </td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{empty requestBean.filteredRequests}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128203;</div>
+                        <p>No <h:outputText value="#{requestBean.activeFilter == 'ALL' ? '' : requestBean.activeFilter.toLowerCase()}"/> requests found.</p>
+                    </div>
+                </h:panelGroup>
+            </div>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

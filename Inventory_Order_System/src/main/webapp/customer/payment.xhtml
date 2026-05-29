@@ -1,0 +1,249 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/customerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="payment"/>
+
+    <ui:define name="title">Payments - IOS Customer</ui:define>
+    <ui:define name="pageTitle">Payments</ui:define>
+    <ui:define name="pageSubtitle">Cart items grouped by supplier — pay each manager separately</ui:define>
+
+    <ui:define name="content">
+        <h:form id="paymentForm">
+
+            <!-- Empty: no cart items with a manager assigned -->
+            <h:panelGroup rendered="#{empty paymentBean.paymentGroups}" layout="block">
+                <div class="empty-state" style="background:white; border-radius:16px; padding:60px 20px; border:1px solid #f1f5f9;">
+                    <div class="empty-icon">&#128179;</div>
+                    <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:8px;">No payments due</p>
+                    <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">
+                        Add products to your cart to see payment breakdown by supplier.
+                    </p>
+                    <h:commandButton value="&#128230; Browse Products"
+                                     action="/customer/dashboard.xhtml?faces-redirect=true"
+                                     styleClass="btn-teal"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- Payment groups exist -->
+            <h:panelGroup rendered="#{not empty paymentBean.paymentGroups}" layout="block">
+
+                <!-- Summary stat cards -->
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:24px;">
+                    <div class="stat-card orange">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">
+                                    <h:outputText value="#{paymentBean.pendingPaymentCount}"/>
+                                </div>
+                                <div class="stat-label">Pending Payments</div>
+                            </div>
+                            <div class="stat-icon">&#9203;</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">
+                                    <h:outputText value="#{paymentBean.paymentGroups.size()}"/>
+                                </div>
+                                <div class="stat-label">Suppliers</div>
+                            </div>
+                            <div class="stat-icon">&#127970;</div>
+                        </div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" style="font-size:20px;">
+                                    &#8377;<h:outputText value="#{paymentBean.grandTotal}">
+                                        <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                    </h:outputText>
+                                </div>
+                                <div class="stat-label">Grand Total</div>
+                            </div>
+                            <div class="stat-icon">&#128176;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pay All button — only when multiple pending groups exist -->
+                <h:panelGroup rendered="#{paymentBean.pendingPaymentCount gt 1}" layout="block">
+                    <div class="pay-all-banner">
+                        <div>
+                            <div class="pay-all-title">Pay All Suppliers</div>
+                            <div class="pay-all-sub">
+                                <h:outputText value="#{paymentBean.pendingPaymentCount}"/> pending —
+                                Total &#8377;<h:outputText value="#{paymentBean.unpaidTotal}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                        <h:commandButton styleClass="btn-pay-all"
+                                         action="#{paymentBean.payAll()}">
+                            <f:ajax execute="@form" render="paymentForm growl"/>
+                            <h:outputText value="&#128179; Pay All &#8377;"/>
+                            <h:outputText value="#{paymentBean.unpaidTotal}">
+                                <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                            </h:outputText>
+                        </h:commandButton>
+                    </div>
+                </h:panelGroup>
+
+                <!-- One card per manager -->
+                <div class="payment-grid">
+                    <ui:repeat value="#{paymentBean.paymentGroups}" var="group">
+                        <div class="payment-group-card #{group.alreadyPaid ? 'paid' : ''}">
+
+                            <!-- Manager header -->
+                            <div class="payment-group-header">
+                                <div class="payment-manager-icon">&#127970;</div>
+                                <div>
+                                    <div class="payment-manager-name">
+                                        <h:outputText value="#{group.manager.organizationName}"/>
+                                    </div>
+                                    <div class="payment-manager-sub">
+                                        <h:outputText value="#{group.cartItems.size()}"/> product(s)
+                                    </div>
+                                </div>
+                                <h:panelGroup rendered="#{group.alreadyPaid}" style="margin-left:auto;">
+                                    <span class="badge-instock">&#10003; Paid</span>
+                                </h:panelGroup>
+                            </div>
+
+                            <!-- Cart items for this manager -->
+                            <table class="payment-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Unit Price</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <ui:repeat value="#{group.cartItems}" var="item">
+                                        <tr>
+                                            <td>
+                                                <span style="font-weight:600;">
+                                                    <h:outputText value="#{item.productId.name}"/>
+                                                </span>
+                                                <div style="font-size:11px; color:#94a3b8;">
+                                                    <h:outputText value="#{item.productId.categoryId != null ? item.productId.categoryId.categoryName : ''}"/>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span style="font-weight:600;">
+                                                    <h:outputText value="#{item.quantity}"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                &#8377;<h:outputText value="#{item.productId.price}">
+                                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                                </h:outputText>
+                                            </td>
+                                            <td>
+                                                <span style="font-weight:600; color:#0d9488;">
+                                                    &#8377;<h:outputText
+                                                        value="#{item.productId.price.multiply(item.quantity)}">
+                                                        <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                                    </h:outputText>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </ui:repeat>
+                                </tbody>
+                            </table>
+
+                            <!-- Total row -->
+                            <div class="payment-total-row">
+                                <span class="payment-total-label">Total to Pay</span>
+                                <span class="payment-total-amount">
+                                    &#8377;<h:outputText value="#{group.total}">
+                                        <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
+
+                            <!-- Pay / Paid -->
+                            <h:panelGroup rendered="#{!group.alreadyPaid}">
+                                <h:commandButton styleClass="btn-pay"
+                                                 action="#{paymentBean.pay(group)}">
+                                    <f:ajax execute="@form" render="paymentForm growl"/>
+                                    <h:outputText value="&#128179; Pay &#8377;"/>
+                                    <h:outputText value="#{group.total}">
+                                        <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                    </h:outputText>
+                                </h:commandButton>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{group.alreadyPaid}">
+                                <div class="paid-badge">&#10003; Payment Completed</div>
+                            </h:panelGroup>
+
+                        </div>
+                    </ui:repeat>
+                </div>
+
+            </h:panelGroup>
+
+            <!-- Payment History -->
+            <h:panelGroup rendered="#{not empty paymentBean.paymentHistory}" layout="block"
+                          style="margin-top:32px;">
+                <div class="payment-history-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="card-title">&#128196; Payment History</div>
+                            <div class="card-subtitle">
+                                <h:outputText value="#{paymentBean.paymentHistory.size()}"/> payment(s) made
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat value="#{paymentBean.paymentHistory}" var="pay">
+                                <tr>
+                                    <td><h:outputText value="#{pay.paymentId}"/></td>
+                                    <td>
+                                        <span style="font-weight:600;">
+                                            <h:outputText value="#{pay.managerId.organizationName}"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight:700; color:#0d9488;">
+                                            &#8377;<h:outputText value="#{pay.totalAmount}">
+                                                <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                            </h:outputText>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge #{pay.status.name() == 'COMPLETED' ? 'badge-Approved' : pay.status.name() == 'PENDING' ? 'badge-Pending' : 'badge-Cancelled'}">
+                                            <h:outputText value="#{pay.status}"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <h:outputText value="#{pay.paymentDate}">
+                                            <f:convertDateTime pattern="dd MMM yyyy, hh:mm a"/>
+                                        </h:outputText>
+                                    </td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </div>
+            </h:panelGroup>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

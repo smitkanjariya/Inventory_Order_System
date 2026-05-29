@@ -1,0 +1,174 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/customerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="cart"/>
+
+    <ui:define name="title">My Cart - IOS Customer</ui:define>
+    <ui:define name="pageTitle">My Cart</ui:define>
+    <ui:define name="pageSubtitle">Review your selected products before placing a request</ui:define>
+
+    <ui:define name="content">
+        <h:form id="cartForm">
+
+            <!-- Empty cart state -->
+            <h:panelGroup rendered="#{cartBean.cartEmpty}" layout="block">
+                <div class="empty-state" style="background:white; border-radius:16px; padding:60px 20px; border:1px solid #f1f5f9;">
+                    <div class="empty-icon">&#128722;</div>
+                    <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:8px;">Your cart is empty</p>
+                    <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Browse products and add items to your cart.</p>
+                    <h:commandButton value="&#128230; Browse Products"
+                                     action="/customer/dashboard.xhtml?faces-redirect=true"
+                                     styleClass="btn-teal"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- Cart with items -->
+            <h:panelGroup rendered="#{!cartBean.cartEmpty}" layout="block">
+                <div class="cart-layout">
+
+                    <!-- Items table -->
+                    <div class="cart-table-card">
+                        <div class="table-toolbar">
+                            <div>
+                                <div class="card-title">&#128722; Cart Items</div>
+                                <div class="card-subtitle">
+                                    <h:outputText value="#{cartBean.cartCount}"/> item(s) —
+                                    <h:outputText value="#{cartBean.totalItems}"/> total units
+                                </div>
+                            </div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Supplier</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ui:repeat value="#{cartBean.cartItems}" var="item">
+                                    <tr>
+                                        <td>
+                                            <div class="product-thumb">
+                                                <div class="product-thumb-icon">&#128230;</div>
+                                                <div>
+                                                    <div class="product-thumb-name">
+                                                        <h:outputText value="#{item.productId.name}"/>
+                                                    </div>
+                                                    <div class="product-thumb-cat">
+                                                        <h:outputText value="#{item.productId.categoryId != null ? item.productId.categoryId.categoryName : 'Uncategorized'}"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h:panelGroup rendered="#{item.productId.managerId != null}">
+                                                <span style="font-size:13px; font-weight:600; color:#0d9488;">
+                                                    &#127970; <h:outputText value="#{item.productId.managerId.organizationName}"/>
+                                                </span>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{item.productId.managerId == null}">
+                                                <span style="font-size:12px; color:#ef4444; font-weight:600;">&#9888; No manager</span>
+                                            </h:panelGroup>
+                                        </td>
+                                        <td>
+                                            <span style="font-weight:600; color:#0d9488;">
+                                                &#8377;<h:outputText value="#{item.productId.price}">
+                                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                                </h:outputText>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="qty-control">
+                                                <h:commandButton value="−" styleClass="qty-btn" immediate="true">
+                                                    <f:ajax execute="@this" render="cartForm growl"
+                                                            listener="#{cartBean.updateQuantity(item, -1)}"/>
+                                                </h:commandButton>
+                                                <span class="qty-value">
+                                                    <h:outputText value="#{item.quantity}"/>
+                                                </span>
+                                                <h:commandButton value="+" styleClass="qty-btn" immediate="true">
+                                                    <f:ajax execute="@this" render="cartForm growl"
+                                                            listener="#{cartBean.updateQuantity(item, 1)}"/>
+                                                </h:commandButton>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span style="font-weight:700; color:#0f172a;">
+                                                &#8377;<h:outputText value="#{cartBean.getItemSubtotal(item)}">
+                                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                                </h:outputText>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <h:commandButton value="&#128465;" styleClass="btn-remove" immediate="true">
+                                                <f:ajax execute="@this" render="cartForm growl"
+                                                        listener="#{cartBean.removeItem(item)}"/>
+                                            </h:commandButton>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Order summary -->
+                    <div class="summary-card">
+                        <div class="summary-title">&#128203; Order Summary</div>
+
+                        <div class="summary-row">
+                            <span>Items (<h:outputText value="#{cartBean.cartCount}"/>)</span>
+                            <span><h:outputText value="#{cartBean.totalItems}"/> units</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span style="font-weight:600;">
+                                &#8377;<h:outputText value="#{cartBean.grandTotal}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <hr class="summary-divider"/>
+
+                        <div class="summary-total">
+                            <span>Grand Total</span>
+                            <span style="color:#0d9488;">
+                                &#8377;<h:outputText value="#{cartBean.grandTotal}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                            </span>
+                        </div>
+
+                        <hr class="summary-divider"/>
+
+                        <h:commandButton value="&#128203; Send Request" styleClass="btn-teal"
+                                         style="width:100%; padding:12px; font-size:14px; margin-bottom:8px;"
+                                         action="#{cartBean.sendRequests()}">
+                            <f:ajax execute="@form" render="cartForm growl"/>
+                        </h:commandButton>
+
+                        <h:commandButton value="&#128722; Clear Cart" styleClass="btn-clear-cart" immediate="true">
+                            <f:ajax execute="@this" render="cartForm growl"
+                                    listener="#{cartBean.clearCart()}"/>
+                        </h:commandButton>
+
+                        <h:outputLink value="/customer/dashboard.xhtml" styleClass="btn-shop-more">
+                            &#128230; Continue Shopping
+                        </h:outputLink>
+                    </div>
+
+                </div>
+            </h:panelGroup>
+
+        </h:form>
+    </ui:define>
+
+</ui:composition>

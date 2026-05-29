@@ -1,0 +1,14 @@
+.rmv/
+.vscode/
+logs/
+backup/
+java image/
+
+*.log
+*.tmp
+*.class
+target/
+build/
+node_modules/
+
+

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Register - Inventory Order System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .register-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 500px;
+        }
+
+        .register-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 26px;
+        }
+
+        .register-container p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #dce1e7;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-register:hover {
+            background-color: #27ae60;
+        }
+
+        .error-msg {
+            background-color: #fdecea;
+            color: #e74c3c;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .success-msg {
+            background-color: #eafaf1;
+            color: #27ae60;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #ecf0f1;
+            margin: 20px 0;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="register-container">
+        <h2>Create Account</h2>
+        <p class="subtitle">Register your business to get started</p>
+
+        <h:form id="registerForm">
+
+            <!-- Error Message -->
+            <h:panelGroup rendered="#{not empty registerBean.errorMessage}">
+                <div class="error-msg">
+                    <h:outputText value="#{registerBean.errorMessage}"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- Success Message -->
+            <h:panelGroup rendered="#{not empty registerBean.successMessage}">
+                <div class="success-msg">
+                    <h:outputText value="#{registerBean.successMessage}"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- Name and Phone -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <h:inputText id="name" value="#{registerBean.name}"
+                                 required="true"
+                                 requiredMessage="Name is required"
+                                 validatorMessage="Min 3 characters"
+                                 styleClass="input-field">
+                        <f:validateLength minimum="3" maximum="100"/>
+                    </h:inputText>
+                    <h:message for="name" style="color:#e74c3c; font-size:12px;"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <h:inputText id="phone" value="#{registerBean.phone}"
+                                 styleClass="input-field"/>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <h:inputText id="email" value="#{registerBean.email}"
+                             required="true"
+                             requiredMessage="Email is required"
+                             styleClass="input-field"/>
+                <h:message for="email" style="color:#e74c3c; font-size:12px;"/>
+            </div>
+
+            <!-- Organization Name -->
+            <div class="form-group">
+                <label for="organizationName">Organization Name *</label>
+                <h:inputText id="organizationName" value="#{registerBean.organizationName}"
+                             required="true"
+                             requiredMessage="Organization name is required"
+                             styleClass="input-field"/>
+                <h:message for="organizationName" style="color:#e74c3c; font-size:12px;"/>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+                <label for="address">Business Address</label>
+                <h:inputText id="address" value="#{registerBean.address}"
+                             styleClass="input-field"/>
+            </div>
+
+            <hr class="divider"/>
+
+            <!-- Password -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <h:inputSecret id="password" value="#{registerBean.password}"
+                                   required="true"
+                                   requiredMessage="Password is required"
+                                   validatorMessage="Min 6 characters"
+                                   styleClass="input-field">
+                        <f:validateLength minimum="6"/>
+                    </h:inputSecret>
+                    <h:message for="password" style="color:#e74c3c; font-size:12px;"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <h:inputSecret id="confirmPassword" value="#{registerBean.confirmPassword}"
+                                   required="true"
+                                   requiredMessage="Please confirm password"
+                                   styleClass="input-field"/>
+                    <h:message for="confirmPassword" style="color:#e74c3c; font-size:12px;"/>
+                </div>
+            </div>
+
+            <!-- Register Button -->
+            <h:commandButton value="Create Account"
+                             action="#{registerBean.register()}"
+                             styleClass="btn-register"/>
+
+        </h:form>
+
+        <div class="login-link">
+            Already have an account? <h:outputLink value="login.xhtml">Login here</h:outputLink>
+        </div>
+    </div>
+</h:body>
+</html>

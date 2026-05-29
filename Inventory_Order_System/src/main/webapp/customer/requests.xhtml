@@ -1,0 +1,438 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/WEB-INF/templates/customerLayout.xhtml">
+
+    <ui:param name="activeMenu" value="requests"/>
+
+    <ui:define name="title">My Requests - IOS Customer</ui:define>
+    <ui:define name="pageTitle">My Requests</ui:define>
+    <ui:define name="pageSubtitle">Track requests, view supplier reports and make payments</ui:define>
+
+    <ui:define name="content">
+        <h:form id="reqForm">
+
+            <!-- ── Stat Cards ── -->
+            <div class="stats-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:24px;">
+                <div class="stat-card orange">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{customerRequestBean.pendingCount}"/></div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-icon">&#9203;</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{customerRequestBean.acceptedCount}"/></div>
+                            <div class="stat-label">Accepted</div>
+                        </div>
+                        <div class="stat-icon">&#10003;</div>
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{customerRequestBean.rejectedCount}"/></div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                        <div class="stat-icon">&#10007;</div>
+                    </div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value"><h:outputText value="#{customerRequestBean.paidCount}"/></div>
+                            <div class="stat-label">Paid</div>
+                        </div>
+                        <div class="stat-icon">&#128179;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION 1 — PRE-PAYMENT REPORT (manager-wise)
+                 Shown only when there are accepted requests
+            ══════════════════════════════════════════════════ -->
+            <h:panelGroup rendered="#{not empty customerRequestBean.acceptedGroups}" layout="block">
+
+                <div style="font-size:16px; font-weight:700; color:#0f172a; margin-bottom:16px;">
+                    &#128203; Accepted Orders — Pay by Supplier
+                </div>
+
+                <ui:repeat value="#{customerRequestBean.acceptedGroups}" var="group">
+                    <div class="table-card" style="margin-bottom:20px; border:2px solid #{group.paid ? '#10b981' : '#0d9488'};">
+
+                        <!-- Manager header -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#0d9488,#06b6d4); display:flex; align-items:center; justify-content:center; font-size:22px; color:white;">
+                                    &#127970;
+                                </div>
+                                <div>
+                                    <div style="font-size:16px; font-weight:700; color:#0f172a;">
+                                        <h:outputText value="#{group.manager.organizationName}"/>
+                                    </div>
+                                    <div style="font-size:12px; color:#64748b;">
+                                        &#9993; <h:outputText value="#{group.manager.email}"/>
+                                        &#160;&#160;&#128222; <h:outputText value="#{group.manager.phone}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <h:panelGroup rendered="#{group.paid}">
+                                <span class="badge badge-Approved" style="font-size:13px; padding:6px 16px;">&#10003; Paid</span>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- Products table -->
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Unit Price</th>
+                                    <th>Qty</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ui:repeat value="#{group.requests}" var="req">
+                                    <tr>
+                                        <td style="color:#6366f1; font-weight:600;">#<h:outputText value="#{req.requestId}"/></td>
+                                        <td>
+                                            <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{req.productId.name}"/></div>
+                                        </td>
+                                        <td><h:outputText value="#{req.productId.categoryId != null ? req.productId.categoryId.categoryName : '—'}"/></td>
+                                        <td>&#8377;<h:outputText value="#{req.productId.price}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText></td>
+                                        <td><strong><h:outputText value="#{req.quantity}"/></strong></td>
+                                        <td style="font-weight:700; color:#0d9488;">
+                                            &#8377;<h:outputText value="#{req.productId.price.multiply(req.quantity)}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                        </td>
+                                    </tr>
+                                </ui:repeat>
+                            </tbody>
+                        </table>
+
+                        <!-- Total + Pay row -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:14px; border-top:2px solid #f1f5f9;">
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <div>
+                                    <span style="font-size:13px; color:#64748b; font-weight:600;">Total Amount:</span>
+                                    <span style="font-size:22px; font-weight:700; color:#0d9488; margin-left:10px;">
+                                        &#8377;<h:outputText value="#{group.total}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                    </span>
+                                </div>
+                                <a href="#{request.contextPath}/download-report?type=pre&amp;managerId=#{group.manager.userId}&amp;customerId=#{userSession.userId}"
+                                   style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#ede9fe; color:#6d28d9; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                                    &#128196; Download Pre-Report
+                                </a>
+                            </div>
+                            <!-- Fully paid — no Pay button -->
+                            <h:panelGroup rendered="#{group.paid}">
+                                <div style="background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:10px; padding:10px 24px; font-size:14px; font-weight:700;">
+                                    &#10003; Payment Completed
+                                </div>
+                            </h:panelGroup>
+                            <!-- Unpaid — show Pay button for exact total -->
+                            <h:panelGroup rendered="#{!group.paid}">
+                                <button type="button" class="btn-razorpay"
+                                        onclick="startRazorpay(#{group.manager.userId}, #{group.total.multiply(100).longValue()}, '#{userSession.userId}')">
+                                    &#128179; Pay &#8377;<h:outputText value="#{group.total}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                </button>
+                            </h:panelGroup>
+                        </div>
+
+                        <!-- ── POST-PAYMENT RECEIPT (shown after payment) ── -->
+                        <h:panelGroup rendered="#{group.paid and not empty group.receipts}" layout="block">
+                            <div style="margin-top:20px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                    <div style="font-size:13px; font-weight:700; color:#065f46;">
+                                        &#128196; Payment Receipt — <h:outputText value="#{group.manager.organizationName}"/>
+                                    </div>
+                                    <!-- Post-payment PDF download -->
+                                    <a href="#{request.contextPath}/download-report?type=post&amp;managerId=#{group.manager.userId}&amp;customerId=#{userSession.userId}"
+                                       style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#065f46; color:white; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none;">
+                                        &#128196; Download Receipt PDF
+                                    </a>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Receipt #</th>
+                                            <th>Amount Paid</th>
+                                            <th>Status</th>
+                                            <th>Date &amp; Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{group.receipts}" var="pay">
+                                            <tr>
+                                                <td style="font-weight:600; color:#6366f1;">#<h:outputText value="#{pay.paymentId}"/></td>
+                                                <td style="font-weight:700; color:#0d9488;">
+                                                    &#8377;<h:outputText value="#{pay.totalAmount}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-Approved">
+                                                        <h:outputText value="#{pay.status}"/>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <h:outputText value="#{pay.paymentDate}">
+                                                        <f:convertDateTime pattern="dd MMM yyyy, hh:mm a"/>
+                                                    </h:outputText>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+
+                    </div>
+                </ui:repeat>
+            </h:panelGroup>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION 2 — ALL REQUESTS TABLE
+            ══════════════════════════════════════════════════ -->
+            <div class="table-card" style="margin-top:8px;">
+                <div class="table-toolbar">
+                    <div>
+                        <div class="card-title">&#128203; All Requests</div>
+                        <div class="card-subtitle">Complete history of your product requests</div>
+                    </div>
+                    <h:commandButton value="&#8635; Refresh" styleClass="btn-clear"
+                                     action="#{customerRequestBean.reload()}">
+                        <f:ajax execute="@this" render="reqForm"/>
+                    </h:commandButton>
+                </div>
+
+                <h:panelGroup rendered="#{empty customerRequestBean.myRequests}">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128203;</div>
+                        <p>No requests yet. Add items to cart and send requests to managers.</p>
+                    </div>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{not empty customerRequestBean.myRequests}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product</th>
+                                <th>Supplier</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Report</th>
+                                <th>Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat value="#{customerRequestBean.myRequests}" var="req">
+                                <tr>
+                                    <td><span style="font-weight:600; color:#6366f1;">#<h:outputText value="#{req.requestId}"/></span></td>
+                                    <td>
+                                        <div style="font-weight:600; color:#0f172a;"><h:outputText value="#{req.productId.name}"/></div>
+                                        <div style="font-size:12px; color:#94a3b8;"><h:outputText value="#{req.productId.categoryId != null ? req.productId.categoryId.categoryName : ''}"/></div>
+                                    </td>
+                                    <td>
+                                        <span style="font-size:13px; font-weight:600; color:#0d9488;">
+                                            &#127970; <h:outputText value="#{req.managerId.organizationName}"/>
+                                        </span>
+                                    </td>
+                                    <td><h:outputText value="#{req.quantity}"/></td>
+                                    <td>&#8377;<h:outputText value="#{req.productId.price}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText></td>
+                                    <td style="font-weight:700;">
+                                        &#8377;<h:outputText value="#{req.productId.price.multiply(req.quantity)}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                    </td>
+                                    <td>
+                                        <span class="badge #{req.status == 'PENDING' ? 'badge-Pending' : req.status == 'ACCEPTED' ? 'badge-Approved' : req.status == 'PAID' ? 'badge-instock' : 'badge-Cancelled'}">
+                                            <h:outputText value="#{req.status}"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <h:outputText value="#{req.createdAt}">
+                                            <f:convertDateTime pattern="dd MMM yyyy"/>
+                                        </h:outputText>
+                                    </td>
+
+                                    <!-- Report column -->
+                                    <td>
+                                        <h:panelGroup rendered="#{req.status.name() == 'ACCEPTED' or req.status.name() == 'PAID'}">
+                                            <a href="#{request.contextPath}/download-report?type=pre&amp;managerId=#{req.managerId.userId}&amp;customerId=#{userSession.userId}&amp;requestId=#{req.requestId}"
+                                               style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#ede9fe; color:#6d28d9; border-radius:7px; font-size:11px; font-weight:600; text-decoration:none;">
+                                                &#128196; Pre-Report
+                                            </a>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{req.status.name() != 'ACCEPTED' and req.status.name() != 'PAID'}">
+                                            <span style="font-size:12px; color:#94a3b8;">&#8212;</span>
+                                        </h:panelGroup>
+                                    </td>
+
+                                    <!-- Payment column -->
+                                    <td>
+                                        <!-- ACCEPTED: show Pay button -->
+                                        <h:panelGroup rendered="#{req.status.name() == 'ACCEPTED'}" layout="block">
+                                            <button type="button"
+                                                    style="display:inline-flex; align-items:center; gap:5px; padding:7px 14px; background:linear-gradient(135deg,#0d9488,#06b6d4); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;"
+                                                    onclick="startRazorpayForRequest(
+                                                        #{req.requestId},
+                                                        #{req.managerId.userId},
+                                                        #{req.productId.price.multiply(req.quantity).multiply(100).longValue()},
+                                                        '#{userSession.userId}'
+                                                    )">
+                                                &#128179; Pay &#8377;<h:outputText value="#{req.productId.price.multiply(req.quantity)}"><f:convertNumber minFractionDigits="2" maxFractionDigits="2"/></h:outputText>
+                                            </button>
+                                        </h:panelGroup>
+
+                                        <!-- PAID: show receipt download -->
+                                        <h:panelGroup rendered="#{req.status.name() == 'PAID'}" layout="block">
+                                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                                <span style="display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#065f46; background:#d1fae5; border:1px solid #a7f3d0; border-radius:7px; padding:5px 10px;">
+                                                    &#10003; Paid
+                                                </span>
+                                                <a href="#{request.contextPath}/download-report?type=post&amp;managerId=#{req.managerId.userId}&amp;customerId=#{userSession.userId}&amp;requestId=#{req.requestId}"
+                                                   style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#065f46; color:white; border-radius:7px; font-size:11px; font-weight:600; text-decoration:none;">
+                                                    &#128196; Receipt PDF
+                                                </a>
+                                            </div>
+                                        </h:panelGroup>
+
+                                        <!-- Other statuses -->
+                                        <h:panelGroup rendered="#{req.status.name() != 'ACCEPTED' and req.status.name() != 'PAID'}">
+                                            <span style="font-size:12px; color:#94a3b8;">&#8212;</span>
+                                        </h:panelGroup>
+                                    </td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION 3 — ALL PAYMENTS HISTORY
+            ══════════════════════════════════════════════════ -->
+            <h:panelGroup rendered="#{not empty customerRequestBean.allPayments}" layout="block"
+                          style="margin-top:8px;">
+                <div class="table-card">
+                    <div class="table-toolbar">
+                        <div>
+                            <div class="card-title">&#128196; Payment History</div>
+                            <div class="card-subtitle">
+                                <h:outputText value="#{customerRequestBean.allPayments.size()}"/> payment(s) made
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat value="#{customerRequestBean.allPayments}" var="pay">
+                                <tr>
+                                    <td style="font-weight:600; color:#6366f1;">#<h:outputText value="#{pay.paymentId}"/></td>
+                                    <td style="font-weight:600;">
+                                        &#127970; <h:outputText value="#{pay.managerId.organizationName}"/>
+                                    </td>
+                                    <td style="font-weight:700; color:#0d9488;">
+                                        &#8377;<h:outputText value="#{pay.totalAmount}">
+                                            <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                        </h:outputText>
+                                    </td>
+                                    <td>
+                                        <h:outputText value="#{pay.paymentMethod != null ? pay.paymentMethod : 'Online'}"/>
+                                    </td>
+                                    <td>
+                                        <span class="badge #{pay.status.name() == 'COMPLETED' ? 'badge-Approved' : pay.status.name() == 'PENDING' ? 'badge-Pending' : 'badge-Cancelled'}">
+                                            <h:outputText value="#{pay.status}"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <h:outputText value="#{pay.paymentDate}">
+                                            <f:convertDateTime pattern="dd MMM yyyy, hh:mm a"/>
+                                        </h:outputText>
+                                    </td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </div>
+            </h:panelGroup>
+
+            <!-- ── Hidden fields for Razorpay callback ── -->
+            <h:inputHidden id="rzpPaymentId"       value="#{customerRequestBean.rzpPaymentId}"/>
+            <h:inputHidden id="rzpSignature"       value="#{customerRequestBean.rzpSignature}"/>
+            <h:inputHidden id="rzpOrderIdCallback" value="#{customerRequestBean.rzpOrderIdCallback}"/>
+            <h:inputHidden id="rzpManagerId"       value="#{customerRequestBean.pendingManagerId}"/>
+            <h:inputHidden id="rzpRequestId"       value="#{customerRequestBean.pendingRequestId}"/>
+            <h:inputHidden id="rzpAmount"          value="#{customerRequestBean.pendingAmount}"/>
+            <h:commandButton id="rzpConfirmBtn" style="display:none;"
+                             action="#{customerRequestBean.confirmRazorpayPayment()}">
+                <f:ajax execute="@form" render="@form"/>
+            </h:commandButton>
+
+        </h:form>
+
+        <!-- Razorpay Checkout JS -->
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+            // Group-level payment (manager card at top)
+            function startRazorpay(managerId, amountPaise, customerId) {
+                document.getElementById('reqForm:rzpRequestId').value = '';
+                launchRazorpay(managerId, amountPaise, customerId, null);
+            }
+
+            // Per-request payment (table row Pay button)
+            function startRazorpayForRequest(requestId, managerId, amountPaise, customerId) {
+                document.getElementById('reqForm:rzpRequestId').value = requestId;
+                document.getElementById('reqForm:rzpManagerId').value = managerId;
+                document.getElementById('reqForm:rzpAmount').value    = amountPaise / 100;
+                launchRazorpay(managerId, amountPaise, customerId, requestId);
+            }
+
+            function launchRazorpay(managerId, amountPaise, customerId, requestId) {
+                fetch('#{request.contextPath}/razorpay-create-order?managerId=' + managerId
+                        + '&amp;customerId=' + customerId + '&amp;amount=' + amountPaise)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.error) { alert('Payment error: ' + data.error); return; }
+                        var options = {
+                            key:         '#{customerRequestBean.rzpKeyId}',
+                            amount:      data.amount,
+                            currency:    'INR',
+                            name:        'Inventory Order System',
+                            description: requestId ? 'Request #' + requestId + ' Payment' : 'Supplier Payment',
+                            order_id:    data.orderId,
+                            handler: function(response) {
+                                document.getElementById('reqForm:rzpPaymentId').value       = response.razorpay_payment_id;
+                                document.getElementById('reqForm:rzpSignature').value       = response.razorpay_signature;
+                                document.getElementById('reqForm:rzpOrderIdCallback').value = response.razorpay_order_id;
+                                document.getElementById('reqForm:rzpManagerId').value       = managerId;
+                                document.getElementById('reqForm:rzpConfirmBtn').click();
+                            },
+                            prefill: { name: '#{userSession.name}', email: '#{userSession.email}' },
+                            theme:   { color: '#0d9488' }
+                        };
+                        new Razorpay(options).open();
+                    })
+                    .catch(function(e) { alert('Could not initiate payment. Please try again.'); });
+            }
+        </script>
+    </ui:define>
+
+</ui:composition>
